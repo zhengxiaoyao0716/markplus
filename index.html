@@ -1,0 +1,156 @@
+<!-- markplus --><style>.Markplus { }</style>
+<script>
+(function (global, factory) {
+    if (typeof define === "function" && define.amd) {
+        define(['exports'], factory);
+    } else if (typeof exports !== "undefined") {
+        factory(exports);
+    } else {
+        var mod = {
+            exports: {}
+        };
+        factory(mod.exports);
+        global.Markplus = mod.exports;
+    }
+})(this, function (exports) {
+    'use strict';
+
+    Object.defineProperty(exports, "__esModule", {
+        value: true
+    });
+
+    function _objectWithoutProperties(obj, keys) {
+        var target = {};
+
+        for (var i in obj) {
+            if (keys.indexOf(i) >= 0) continue;
+            if (!Object.prototype.hasOwnProperty.call(obj, i)) continue;
+            target[i] = obj[i];
+        }
+
+        return target;
+    }
+
+    var elements = [];
+
+    exports.default = /** @param {HTMLElement} container */function (container) {
+        elements.forEach( /** @param {HTMLElement} ele */function (ele) {
+            return container.appendChild(ele);
+        });
+    };
+
+    var register = function register(at, payload) {
+        var ele = /** @return {HTMLElement} */function () {
+            if (payload instanceof String) {
+                var _ele = document.createElement('span');
+                _ele.innerHTML = payload + '<br>';
+                return _ele;
+            }
+            if (payload instanceof Promise) {
+                return document.createElement('span');
+            }
+            if (payload instanceof Object && payload.tag) {
+                var tag = payload.tag,
+                    html = payload.html,
+                    props = _objectWithoutProperties(payload, ['tag', 'html']);
+
+                var _ele2 = document.createElement(tag);
+                _ele2.innerHTML = html;
+                Object.keys(props).forEach(function (name) {
+                    return _ele2.setAttribute(name, props[name]);
+                });
+                return _ele2;
+            }
+            return document.createElement('span');
+        }();
+        ele.setAttribute('data-markplus-at', at);
+        elements[at] = ele;
+    };
+
+    register(0, { "tag": "span", "html": "<!-- https://github.com/zhengxiaoyao0716/markplus -->" });
+    register(1, console.log('Markplus:', '{\n' // `$IDENT ...args` used to call the ident function with args
+    ));
+    register(2, console.log("    Home: https://github.com/zhengxiaoyao0716/markplus \\n", "    Author: github.com/zhengxiaoyao0716 \\n" /* `/N` will be replaced by next N lines after. */, '}\n'));
+    register(5, console.log(new Date() // the execution result would be used instead of convert to string.                                                                  // if `/N` followed `IDENT` directly without white-space,
+    ));
+    register(7, void ("======== ======== ======== ======== ======== ======== ======== ========         // not equals to `$_/N` (without white-space), the latter will execute the codes.", "(^_^) Those block only visible in source to make things looks tidiness.", "======== ======== ======== ======== ======== ======== ======== ========", "" // equals to `$void /4`, nothing would execute but next N lines was gone.
+    ));
+    var hitokoto = exports.hitokoto = function hitokoto(a, b, c) {
+        return [a, b, c][parseInt(Math.random() * 3)] // `#IDENT(...args) ...results` used to define a function, `()` can be omitted if no arguments.
+        ;
+    };
+    var _lang = function _lang() {
+        var _arguments = arguments;
+
+        var result = void 0;
+        result = function () {
+            return location.search.match(/lang=(\w+)/) // `()` was omitted, for no arguments needed.
+            ;
+        }(result);
+        result = function (match) {
+            return console.log(match), ['en', 'zh', 'jp'].indexOf(match && match[1]) // although `...results` allowed, only the last result will return.
+            ;
+        }(result);
+        result = function (index) {
+            return _arguments[index == -1 ? 0 : index];
+        }(result);
+        return result // you could use `#IDENT(...args) /N` to define a function composed by mutli-line functions.
+        ;
+    };
+    var lang = exports.lang = function () {
+        var result = void 0;
+        result = function () {
+            return location.search.match(/lang=(\w+)/) // the function defined below would be executed immediately.
+            ;
+        }(result);
+        result = function (match) {
+            return ['en', 'zh', 'jp'].indexOf(match && match[1]);
+        }(result);
+        result = function (index) {
+            return function () {
+                return arguments[index == -1 ? 0 : index];
+            } // the last return is a function, and this would be assigned to the `IDENT`.
+            ;
+        }(result);
+        return result // `/N` followed `IDENT` directly without white-space,
+        ;
+    }();
+    var version = exports.version = function () {
+        return 'v0.0.1' // `#IDENT/value` means `#IDENT/0 value`, you can use this to define constant.
+        ;
+    }();
+    register(22, console.log.bind(console, 'version:') / version // for `/N` followed `$IDENT(...args)` directly, 'v0.0.1' was used, instead of 'version'.                                             // `$IDENT(this, ...thisArgs) ...args` equals to `$IDENT.bind(this, ...thisArgs)(...Args)`.
+    );
+    register(24, void 'equals to `$_/0 ...`' // notice that the `...args` will be execute for `/N` followed `IDENT` directly without white-space.
+    );
+    register(25, void ("The codes above is equivalent to those:", "``` javascript", "    // L1", "    console.log(", "        'Markplus:', '{\\n'                                                 // `$IDENT ...args` used to call the ident function with args", "    );", "    // L2", "    console.log(", "        \"    Home: https://github.com/zhengxiaoyao0716/markplus \\n\",", "        \"    Author: github.com/zhengxiaoyao0716 \\n\",", "        \"}\\n' /* `/N` will be replaced by next N lines after. */, '}\\n\"", "    );", "    // L5", "    _L6 = (", "        new Date()                                                                  // the execution result would be used instead of convert to string.", "    );", "    console.log(", "        _L6                                                                  // if `/N` followed `IDENT` directly without white-space,", "    );", "    // L7", "    void(", "        \"======== ======== ======== ======== ======== ======== ======== ========         // not equals to `$_/N` (without white-space), the latter will execute the codes.\",", "        \"(^_^) Those block only visible in source to make things looks tidiness.\",", "        \"======== ======== ======== ======== ======== ======== ======== ========\",", "        \"\"                                                                           // equals to `$void /4`, nothing would execute but next N lines was gone.", "    );", "", "    // L12", "    const hitokoto = function (", "        a, b, c", "    ) { return (", "        [a, b, c][parseInt(Math.random() * 3)]                       // `#IDENT(...args) ...results` used to define a function, `()` can be omitted if no arguments.", "    ); };", "    // L13", "    const lang = function () {", "        let result;", "        result = (() => (", "            location.search.match(/lang=(\\w+)/)                                         // `()` was omitted, for no arguments needed.", "        ))(result);", "        result = ((match) => (", "            console.log(match), ['en', 'zh', 'jp'].indexOf(match && match[1])   // although `...results` allowed, only the last result will return.", "        ))(result);", "        result = ((index) => (", "            arguments[index == -1 ? 0 : index];", "        ))(result);", "        return (", "            result                                                                       // you could use `#IDENT(...args) /N` to define a function composed by mutli-line functions.", "        );", "    };", "    // L17", "    _lang = function () {", "        let result;", "        result = (() => (", "            location.search.match(/lang=(\\w+)/)                                         // the function defined below would be executed immediately.", "        ))(result);", "        result = ((match) => (", "            ['en', 'zh', 'jp'].indexOf(match && match[1])", "        ))(result);", "        result = ((index) => (", "            function () { return arguments[index == -1 ? 0 : index]; }          // the last return is a function, and this would be assigned to the `IDENT`.", "        ))(result);", "        return (", "            result                                                                         // `/N` followed `IDENT` directly without parentheses-params and white-space", "        );", "    };", "    const lang = _lang();", "    // L21", "    _version = function () { return (", "        'v0.0.1'                                                               // `#IDENT/value` means `#IDENT/0 value`, you can use this to define constant.", "    ); };", "    const version = _version();", "    // L22", "    _L23 = (", "        version                                                                     // for `/N` followed `$IDENT(...args)` directly, 'v0.0.1' was used, instead of 'version'", "    );", "    _L24 = (", "        void(", "            'equals to `$_/0 ...`'                                                       // notice that the `...args` will be execute for `/N` followed `IDENT` directly without white-space.", "        )", "    );", "    console.log.bind(console, 'version:')(", "        _L23,", "        _L24                                             // `$IDENT(this, ...thisArgs) ...args` equals to `$IDENT.bind(this, ...thisArgs)(...Args)`.", "    );", "", "    // L25", "    void(", "        \",,,\"                                                                        // `/:n` = `/N` , N = n - 25", "    )", "```", "", "", "", "", "" // `/:n` = `/N` , N = n - 25
+    ));
+    register(121, { "tag": "span", "html": "# Markplus<br>", "class": "Header Header-1", "data-markplus-header-level": 1 });
+    register(122, lang({ "tag": "span", "html": "## The strengthening of the `Markdown`. (<a href='?lang=zh'>中文版？</a>)<br>", "class": "Header Header-2", "data-markplus-header-level": 2 }, { "tag": "span", "html": "## `Markdown` 的加强 (<a href='?lang=en'>English?</a>)<br>", "class": "Header Header-2", "data-markplus-header-level": 2 }));
+    register(125, { tag: 'span', html: '<br>' });
+    register(126, { tag: 'span', html: '***<br>' });
+    register(127, lang({ "tag": "span", "html": "## Base goal<br>", "class": "Header Header-2", "data-markplus-header-level": 2 }, { "tag": "span", "html": "## 基础目标<br>", "class": "Header Header-2", "data-markplus-header-level": 2 }));
+    register(130, lang({ "tag": "span", "html": "### More perfect tool chain.<br>", "class": "Header Header-3", "data-markplus-header-level": 3 }, { "tag": "span", "html": "### 更完善的工具链<br>", "class": "Header Header-3", "data-markplus-header-level": 3 }));
+    register(133, lang({ "tag": "span", "html": "Easy to embedded, Convenient extension.<br>", "class": "Plain" }, { "tag": "span", "html": "易用，易扩展<br>", "class": "Plain" }));
+    register(136, { tag: 'span', html: '<br>' });
+    register(137, lang({ "tag": "span", "html": "### Strengthing for `Table` .<br>", "class": "Header Header-3", "data-markplus-header-level": 3 }, { "tag": "span", "html": "### 加强表格<br>", "class": "Header Header-3", "data-markplus-header-level": 3 }));
+    register(140, lang({ "tag": "span", "html": "Multi-unit-grid, Macro calculate.<br>", "class": "Plain" }, { "tag": "span", "html": "混合单元格，宏计算<br>", "class": "Plain" }));
+    register(143, { tag: 'span', html: '<br>' });
+    register(144, lang({ "tag": "span", "html": "### Clearer semantics.<br>", "class": "Header Header-3", "data-markplus-header-level": 3 }, { "tag": "span", "html": "### 更清晰的语义<br>", "class": "Header Header-3", "data-markplus-header-level": 3 }));
+    register(147, lang({ "tag": "span", "html": "When to break line, When to scroll.<br>", "class": "Plain" }, { "tag": "span", "html": "何时换行，何时滚动<br>", "class": "Plain" }));
+    register(150, { tag: 'span', html: '<br>' });
+    register(151, lang({ "tag": "span", "html": "### Dynamic interactivity.<br>", "class": "Header Header-3", "data-markplus-header-level": 3 }, { "tag": "span", "html": "### 动态交互<br>", "class": "Header Header-3", "data-markplus-header-level": 3 }));
+    register(154, lang({ "tag": "span", "html": "Optional\\ configurable and safety dynamic perform.<br>", "class": "Plain" }, { "tag": "span", "html": "可选、可配置并且安全的动态演出<br>", "class": "Plain" }));
+    register(157, { tag: 'span', html: '<br>' });
+    register(158, lang({ "tag": "span", "html": "### Reasonable structure.<br>", "class": "Header Header-3", "data-markplus-header-level": 3 }, { "tag": "span", "html": "### 合理的结构<br>", "class": "Header Header-3", "data-markplus-header-level": 3 }));
+    register(161, lang({ "tag": "span", "html": "Reusable, Inheritable.<br>", "class": "Plain" }, { "tag": "span", "html": "可复用，可继承<br>", "class": "Plain" }));
+    register(164, { tag: 'span', html: '<br>' });
+    register(165, lang({ "tag": "span", "html": "### Flexible usage.<br>", "class": "Header Header-3", "data-markplus-header-level": 3 }, { "tag": "span", "html": "### 使用灵活<br>", "class": "Header Header-3", "data-markplus-header-level": 3 }));
+    register(168, lang({ "tag": "span", "html": "Precompiled\\ Runtime-render.<br>", "class": "Plain" }, { "tag": "span", "html": "预编译、运行时渲染<br>", "class": "Plain" }));
+    register(171, { tag: 'span', html: '<br>' });
+    register(172, lang({ "tag": "span", "html": "## But, All the premises: Keep Simple.<br>", "class": "Header Header-2", "data-markplus-header-level": 2 }, { "tag": "span", "html": "## 但是，一切的前提是：保持简单<br>", "class": "Header Header-2", "data-markplus-header-level": 2 }));
+    register(175, { tag: 'span', html: '<br>' });
+    var name = exports.name = 'Markplus';
+});
+</script>
+<div id="markplus"></div><script>Markplus.default(document.querySelector('#markplus'));</script>

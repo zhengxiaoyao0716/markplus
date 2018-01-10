@@ -1,0 +1,37 @@
+{
+  "name": "markplus",
+  "version": "0.0.1",
+  "description": "The strengthening of the `Markdown`.",
+  "main": "index.js",
+  "bin": {
+    "markplus": "./bin/markplus.js"
+  },
+  "scripts": {
+    "build": "babel src --out-dir lib -s",
+    "start": "npm run build && node ./bin/markplus && start index.html",
+    "test": "npm run build && node lib/test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zhengxiaoyao0716/markplus.git"
+  },
+  "keywords": [
+    "markdown"
+  ],
+  "author": "github.com/zhengxiaoyao0716",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/zhengxiaoyao0716/markplus/issues"
+  },
+  "homepage": "https://github.com/zhengxiaoyao0716/markplus#readme",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-eslint": "^8.0.2",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-flow": "^6.23.0",
+    "babel-preset-stage-2": "^6.24.1",
+    "eslint": "^4.12.0",
+    "http-server": "^0.10.0"
+  }
+}
