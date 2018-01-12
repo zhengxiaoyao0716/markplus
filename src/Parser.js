@@ -14,7 +14,7 @@ export class Element {
         return this.size == this.lines.length;
     }
     get json() { return this; }
-    dump() { return `register(${this.at}, ${JSON.stringify(this.json)});`; }
+    dump() { return `Markplus.register(${this.at}, ${JSON.stringify({ ...this.json })});`; }
 }
 export class Invalid extends Element {
     constructor(line: string, reason: string, at: number) {
@@ -73,11 +73,11 @@ export class Load extends Element {
             : this.lines.slice(1).map(
                 exec ?
                     line => line instanceof Element ?
-                        `${JSON.stringify(line.json)}` : line
+                        `${JSON.stringify(line.json)}` : `(\n        ${line}\n    )`
                     : line => `${JSON.stringify(line)}`
             ).join(',\n    ');
         const expr = `${args ? `${name}.bind${args}` : name}(\n    ${lines}${extra}\n)`;
-        return `register(${this.at}, ${expr});`;
+        return `Markplus.register(${this.at}, ${expr});`;
     }
 }
 export class Comments extends Element {
@@ -85,17 +85,16 @@ export class Comments extends Element {
         super(1, line, null, at);
     }
     get json() {
-        return { tag: 'span', html: `<!-- ${this.lines[0]} -->` };
+        return { tag: 'span', html: `<!-- ${this.lines[0]} -->`, class: 'Comments' };
     }
 }
 export class Plain extends Element {
-    constructor(line: string, at: number) {
-        super(1, line, null, at);
+    constructor(line: string, at: number, mathced?: [string]) {
+        super(1, line, { mathced }, at);
     }
     get json() {
         return { tag: 'span', html: `${this.lines[0]}<br>`, class: 'Plain' };
     }
-    dump() { return `register(${this.at}, { tag: 'span', html: '${this.lines[0]}<br>' });`; }
 }
 export class Header extends Element {
     constructor(line: string, level: number, content: string, at: number) {
@@ -104,7 +103,36 @@ export class Header extends Element {
         this.content = content;
     }
     get json() {
-        return { tag: 'span', html: `${this.lines[0]}<br>`, class: `Header Header-${this.level}`, 'data-markplus-header-level': this.level };
+        return { tag: 'span', html: `${this.content}<br>`, class: `Header Header-${this.level}`, 'data-markplus-header-level': this.level };
+    }
+}
+export class Code extends Element {
+    static symbol = ['~~~', '```'];
+    constructor(line: string, symbol: string, language: string, at: number) {
+        super(-1, line, { language }, at);
+        this.symbol = symbol;
+        this.language = language;
+    }
+    get json() {
+        return {
+            tag: 'span',
+            html: this.lines.slice(1, this.size - 1).map(line => `<span>${line}</span><br>`).join(''),
+            class: `Code Code-${this.language}`,
+        };
+    }
+    push(line: string, at: number) { // eslint-disable-line no-unused-vars
+        this.lines.push(line);
+        if (line == this.symbol) {
+            this.size = this.lines.length;
+        }
+    }
+}
+export class Divider extends Element {
+    constructor(line: string, at: number) {
+        super(1, line, {}, at);
+    }
+    get json() {
+        return { tag: 'span', html: '<br>', class: 'Divider' };
     }
 }
 
@@ -123,7 +151,7 @@ const Parser = {
                 if (body[cursor] == '(') {
                     let nestableClose = [];
                     let nonestedClose = null;
-                    const index = Array.from(body).findIndex((char, index) => {
+                    const index = Array.from(body).findIndex((char) => {
                         if (nonestedClose) {
                             if (char == nonestedClose) {
                                 nonestedClose = null;
@@ -173,7 +201,7 @@ const Parser = {
             },
         },
         regex: /^([$#])([\w.]+)(.*)?$/,
-        pipe(line: string, at: number) {
+        pipe(line: string, at: number): Save | Load {
             const match = line.match(this.regex);
             if (match == null) {
                 return false;
@@ -202,24 +230,33 @@ const Parser = {
         },
     },
     HTMLElement: {
+        enum: {
+            pipe(line: string, at: number): Element {
+                return new (({
+                    '---': Divider,
+                    '***': Divider,
+                })[line] || Plain)(line, at);
+            },
+        },
         regex: /^(\S*)\s(.*)$/,
-        pipe(line: string, at: number) {
-            const match = line.match(this.regex);
-            if (match == null) {
-                return new Plain(line, at);
+        pipe(line: string, at: number): Element {
+            const matched = line.match(this.regex);
+            if (matched == null) {
+                return this.enum.pipe(line, at);
             }
-            const [, type, content] = match;
+            const [, type, content] = matched;
             const pipe = ({
                 ...(o => (o['#'.repeat(type.length || 1)] = content => new Header(line, type.length, content, at), o))({}),
+                ...Code.symbol.reduce((o, s) => (o[s] = () => new Code(line, s, content, at), o), {}),
                 '': () => line.startsWith('    ') ? false : new Plain(line, at), // 4 white-space means code.
             })[type];
             if (!pipe) {
-                return new Plain(line, at);
+                return new Plain(line, at, { type, content });
             }
             return pipe(content);
         },
     },
-    pipe(line: string, at: number) {
+    pipe(line: string, at: number): Element {
         return this.Function.pipe(line, at) || this.HTMLElement.pipe(line, at) || new Invalid(line, 'Unknown syantax.', at);
     },
     parse(lines: [string]) {

@@ -1,25 +1,46 @@
 import fs from 'fs';
 import path from 'path';
 import * as babel from 'babel-core';
+import commander from 'commander';
 
-import Markplus from './core';
+import pkg from './../package.json';
+import Markplus, { use } from './core';
+import PluginStyleDefault from './plugin/style-default';
 
 const babelrc = JSON.parse(fs.readFileSync(path.join(__dirname, './../.babelrc'), 'utf-8'));
-const style = '<style>.Markplus { }</style>';
-const launch = name => `<div id="markplus"></div><script>${name}.default(document.querySelector('#markplus'));</script>`;
+const launch = name => `<div id="markplus" class="Markplus"></div><script>${name}.default(document.querySelector('#markplus'));</script>`;
+use(PluginStyleDefault);
 
-const transform = (code, name) => babel.transform(code, { ...babelrc, plugins: ['transform-es2015-modules-umd'], filename: name })
+const transform = (code, name) => babel.transform(code, { ...babelrc, plugins: ['transform-es2015-modules-umd'], filename: name });
 
 const compile = () => {
-    const input = fs.readFileSync('ReadMe.mp', 'utf-8');
-    Markplus.from(input)
+    const input = commander.args[0]; // eslint-disable-line no-console
+    if (!input) {
+        throw new Error('missing input file.');
+    }
+    Markplus.from(fs.readFileSync(input, 'utf-8'))
         .then(mp => ({ ...mp, code: mp.code() }))
-        .then(mp => ({ ...mp, ...transform(mp.code, mp.name) }))
-        .then(({ code, name }) => (`<!-- markplus -->${style}\n<script>\n${code}\n</script>\n${launch(name)}\n`))
+        .then(mp => commander.transform ? ({ ...mp, ...transform(mp.code, mp.name) }) : mp)
+        .then(({ code, name, plugin }) => commander.js ? code : [
+            ...plugin('head'),
+            `<script>\n${code}\n</script>`,
+            launch(name),
+            '',
+        ].join('\n'))
         .then(output => {
-            fs.writeFileSync(path.join(__dirname, './../index.html'), output, 'utf-8');
-            console.log(output); // eslint-disable-line no-console
+            commander.out ?
+                fs.writeFileSync(commander.out, output, 'utf-8')
+                : console.log(output); // eslint-disable-line no-console
         }).catch(console.error); // eslint-disable-line no-console
 };
+
+commander.version(pkg.version).usage('[options] <file ...>');
+[
+    ['--html', 'Compile to html'],
+    ['--js', 'Compile to javascript'],
+    ['-o, --out [file]', 'Write the output into the file.'],
+    ['--no-transform', 'With out babel transform.'],
+].forEach(([...args]) => commander.option(...args));
+commander.parse(process.argv);
 
 compile();

@@ -2,9 +2,9 @@ import fs from 'fs';
 import path from 'path';
 
 import Parser, * as Types from './Parser';
+import PluginRenderCode from './plugin/render-code';
 
-const RenderCode = fs.readFileSync(path.join(__dirname, './../src/Render.js'), 'utf-8');
-
+const Render = fs.readFileSync(path.join(__dirname, './../src/Render.js'), 'utf-8');
 const plugins = [
     (self: Markplus) => {
         if (!self.name) {
@@ -12,18 +12,37 @@ const plugins = [
             self.name = firstH1 && `${firstH1.content}`;
         }
         return {
-            dump: () => `export const name = '${self.name}';`,
+            head: () => `<!-- ${self.name} -->`,
+            code: () => Render,
+            dump: () => [
+                ...self.elements.map(ele => ele.dump()),
+                `\nexport const name = '${self.name}';`,
+            ].join('\n'),
         };
     },
 ];
-const names = new Set();
-export const use = (name: string, plugin: (self: Markplus) => { dump: () => string, compile: () => string }) => {
-    if (names.has(name)) {
+const pluginNames = new Set();
+export const use = (
+    plugin: (self: Markplus) => {
+        head: () => string,
+        code: () => string,
+        dump: () => string,
+    }
+) => {
+    const name = plugin.name;
+    if (!name) {
+        throw new Error('Invalid plugin.');
+    }
+    if (pluginNames.has(name)) {
         console.warn(new Error(`plugin name (${name}) conflict.`).stack.replace(/^Error/, 'Warning')); // eslint-disable-line no-console
     }
-    names.add(name);
+    pluginNames.add(name);
     plugins.push(plugin);
 };
+
+[
+    PluginRenderCode,
+].forEach(use);
 
 export default class Markplus {
     static from = (content: string | [string]): Promise<Markplus> => new Promise((resolve, reject) => {
@@ -35,12 +54,14 @@ export default class Markplus {
     constructor(elements: [Types.Element], name?: string) {
         this.elements = elements;
         this.name = name;
-        this.plugins = plugins.map(plugin => plugin(this));
+        const ps = plugins.map(plugin => plugin(this));
+        this.plugin = (action: string): string => ps.map(p => p[action] && p[action]()).filter(code => code != null);
     }
 
     code = () => ([
-        RenderCode,
-        ...this.elements.map(ele => ele.dump()),
-        ...this.plugins.map(plugin => plugin.dump && plugin.dump()).filter(code => code),
+        '\n/* code */\n',
+        ...this.plugin('code'),
+        '\n/* dump */\n',
+        ...this.plugin('dump'),
     ].join('\n'));
 }

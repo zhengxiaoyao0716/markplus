@@ -1,0 +1,34 @@
+.Markplus {
+    font-family: arial,tahoma,'Microsoft Yahei','\5b8b\4f53',sans-serif;
+    padding: 6px;
+    line-height: 1.5;
+}
+.Markplus .Plain,
+.Markplus .Header,
+.Markplus .Code,
+.Markplus .Divider {
+    display: block;
+}
+.Markplus .Divider {
+    border-top: 1px solid #eee;
+}
+.Markplus .Header {
+    font-weight: bold;
+    padding-bottom: 6px;
+}
+.Markplus .Header.Header-1 {
+    border-bottom: 2px solid #eee;
+    font-size: 1.5em;
+}
+.Markplus .Header.Header-2 {
+    font-size: 1.3em;
+}
+.Markplus .Header.Header-3 {
+    font-size: 1.2em;
+}
+.Markplus .Header.Header-4 {
+    font-size: 1.1em;
+}
+.Markplus .Header.Header-5 {
+    font-size: 1em;
+}

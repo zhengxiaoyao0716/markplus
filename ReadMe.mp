@@ -1,9 +1,9 @@
 $console.log 'Markplus:', '{\n'                                                 // `$IDENT ...args` used to call the ident function with args
-$console.log /2 /* `/N` will be replaced by next N lines after. */, '}\n'
-    Home: https://github.com/zhengxiaoyao0716/markplus \n
-    Author: github.com/zhengxiaoyao0716 \n
-$console.log/1                                                                  // if `/N` followed `IDENT` directly without white-space,
-    new Date()                                                                  // the execution result would be used instead of convert to string.
+$console.log /1 /* `/N` will be replaced by next N lines after. */, '\n'
+    Home: 'https://github.com/zhengxiaoyao0716/markplus',
+$console.log/2, '\n'                                                            // if `/N` followed `IDENT` directly without white-space,
+    '    Author:'                                                               // the execution result would be used instead of convert to string.
+    "'github.com/zhengxiaoyao0716',\n}"
 $_ /4                                                                           // equals to `$void /4`, nothing would execute but next N lines was gone.
 ======== ======== ======== ======== ======== ======== ======== ========         // not equals to `$_/N` (without white-space), the latter will execute the codes.
 (^_^) Those block only visible in source to make things looks tidiness.
@@ -31,16 +31,18 @@ The codes above is equivalent to those:
     );
     // L2
     console.log(
-        "    Home: https://github.com/zhengxiaoyao0716/markplus \n",
-        "    Author: github.com/zhengxiaoyao0716 \n",
-        "}\n' /* `/N` will be replaced by next N lines after. */, '}\n"
+        "    Home: 'https://github.com/zhengxiaoyao0716/markplus'," /* `/N` will be replaced by next N lines after. */, '\n'
     );
-    // L5
+    // L4
+    _L5 = (
+        '    Author:'                                                               // the execution result would be used instead of convert to string.
+    )
     _L6 = (
-        new Date()                                                                  // the execution result would be used instead of convert to string.
-    );
+        "'github.com/zhengxiaoyao0716',\n}"
+    )
     console.log(
-        _L6                                                                  // if `/N` followed `IDENT` directly without white-space,
+        _L5,
+        _L6, '\n'                                                            // if `/N` followed `IDENT` directly without white-space,
     );
     // L7
     void(
@@ -116,14 +118,20 @@ The codes above is equivalent to those:
 
 
 
-
-
 # Markplus
 $lang/2
 ## The strengthening of the `Markdown`. (<a href='?lang=zh'>中文版？</a>)
 ## `Markdown` 的加强 (<a href='?lang=en'>English?</a>)
 
-***
+---
+$lang/2
+## Usage
+## 用法
+``` shell
+markplus ReadMe.mp -h
+```
+
+---
 $lang/2
 ## Base goal
 ## 基础目标
@@ -169,6 +177,7 @@ $lang/2
 Precompiled\ Runtime-render.
 预编译、运行时渲染
 
+***
 $lang/2
 ## But, All the premises: Keep Simple.
 ## 但是，一切的前提是：保持简单
