@@ -103,7 +103,14 @@ export class Header extends Element {
         this.content = content;
     }
     get json() {
-        return { tag: 'span', html: `${this.content}<br>`, class: `Header Header-${this.level}`, 'data-markplus-header-level': this.level };
+        const id = this.content.split(/[\s-]+/).join('-');
+        return {
+            tag: 'span',
+            id,
+            html: `<span id="${id}">${this.content}</span><br>`,
+            class: `Header Header-${this.level}`,
+            'data-markplus-header-level': this.level,
+        };
     }
 }
 export class Code extends Element {

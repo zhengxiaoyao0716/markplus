@@ -2,7 +2,7 @@ const Markplus = {
     elements: [],
     renders: [
         [
-            payload => payload instanceof String,
+            payload => typeof payload == 'string',
             payload => {
                 const ele = document.createElement('span');
                 ele.innerHTML = `${payload}<br>`;
@@ -33,6 +33,7 @@ const Markplus = {
     ],
     decorators: [
         (ele, at) => ele.setAttribute('data-markplus-at', at),
+        (ele, at) => ele.id = `L${at}`,
     ],
     register(at, payload) {
         const ele = this.renders.find(([cond]) => cond(payload))[1](payload);

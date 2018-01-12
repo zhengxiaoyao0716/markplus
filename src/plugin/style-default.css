@@ -1,6 +1,6 @@
 .Markplus {
     font-family: arial,tahoma,'Microsoft Yahei','\5b8b\4f53',sans-serif;
-    padding: 6px;
+    padding: 20px;
     line-height: 1.5;
 }
 .Markplus .Plain,
@@ -15,6 +15,13 @@
 .Markplus .Header {
     font-weight: bold;
     padding-bottom: 6px;
+}
+.Markplus .Header:hover::before {
+    color: #888;
+    content: "\00B6";
+    margin-left: -6px;
+    margin-right: 3px;
+    cursor: pointer;
 }
 .Markplus .Header.Header-1 {
     border-bottom: 2px solid #eee;
