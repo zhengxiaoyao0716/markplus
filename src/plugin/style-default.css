@@ -3,15 +3,10 @@
     padding: 20px;
     line-height: 1.5;
 }
-.Markplus .Plain,
-.Markplus .Header,
-.Markplus .Code,
-.Markplus .Divider {
+.Markplus .Target {
     display: block;
 }
-.Markplus .Divider {
-    border-top: 1px solid #eee;
-}
+
 .Markplus .Header {
     font-weight: bold;
     padding-bottom: 6px;
@@ -38,4 +33,13 @@
 }
 .Markplus .Header.Header-5 {
     font-size: 1em;
+}
+.Markplus .Divider {
+    border-top: 1px solid #eee;
+}
+.Markplus .Block, .Markplus .Block>Block {
+    display: block;
+    position: relative;
+    border-left: 3px solid #eee;
+    padding-left: 12px;
 }

@@ -3,20 +3,22 @@ import path from 'path';
 
 import Parser, * as Types from './Parser';
 import PluginRenderCode from './plugin/render-code';
+import PluginRenderPromise from './plugin/render-promise';
+import pkg from './../package.json';
 
 const Render = fs.readFileSync(path.join(__dirname, './../src/Render.js'), 'utf-8');
 const plugins = [
     (self: Markplus) => {
         if (!self.name) {
             const firstH1: Types.Header = self.elements.find(ele => ele instanceof Types.Header && ele.level == 1);
-            self.name = firstH1 && `${firstH1.content}`;
+            self.name = firstH1 ? `${firstH1.content}` : `_${new Date().getTime()}`;
         }
         return {
-            head: () => `<!-- ${self.name} -->`,
-            code: () => Render,
+            head: () => `<!-- Markplus: ${self.name} -->`,
+            code: () => `${Render}Markplus.__defineGetter__('version', () => '${pkg.version}');\n`,
             dump: () => [
-                ...self.elements.map(ele => ele.dump()),
                 `\nexport const name = '${self.name}';`,
+                ...self.elements.map(ele => ele.dump()),
             ].join('\n'),
         };
     },
@@ -42,6 +44,7 @@ export const use = (
 
 [
     PluginRenderCode,
+    PluginRenderPromise,
 ].forEach(use);
 
 export default class Markplus {

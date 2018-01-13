@@ -3,13 +3,13 @@ $console.log /1 /* `/N` will be replaced by next N lines after. */, '\n'
     Home: 'https://github.com/zhengxiaoyao0716/markplus',
 $console.log/2, '\n'                                                            // if `/N` followed `IDENT` directly without white-space,
     '    Author:'                                                               // the execution result would be used instead of convert to string.
-    "'github.com/zhengxiaoyao0716',\n}"
+    "'github.com/zhengxiaoyao0716',"
 $_ /4                                                                           // equals to `$void /4`, nothing would execute but next N lines was gone.
 ======== ======== ======== ======== ======== ======== ======== ========         // not equals to `$_/N` (without white-space), the latter will execute the codes.
 (^_^) Those block only visible in source to make things looks tidiness.
 ======== ======== ======== ======== ======== ======== ======== ========
 
-#hitokoto(a, b, c) [a, b, c][parseInt(Math.random() * 3)]                       // `#IDENT(...args) ...results` used to define a function, `()` can be omitted if no arguments.
+#hitokoto(...words) [...words][parseInt(Math.random() * words.length)]          // `#IDENT(...args) ...results` used to define a function, `()` can be omitted if no arguments.
 #_lang /3                                                                       // you could use `#IDENT(...args) /N` to define a function composed by mutli-line functions.
     location.search.match(/lang=(\w+)/)                                         // `()` was omitted, for no arguments needed.
     (match) console.log(match), ['en', 'zh', 'jp'].indexOf(match && match[1])   // although `...results` allowed, only the last result will return.
@@ -18,9 +18,9 @@ $_ /4                                                                           
     location.search.match(/lang=(\w+)/)                                         // the function defined below would be executed immediately.
     (match) ['en', 'zh', 'jp'].indexOf(match && match[1])
     (index) function () { return arguments[index == -1 ? 0 : index]; }          // the last return is a function, and this would be assigned to the `IDENT`.
-#version/'v0.0.1'                                                               // `#IDENT/value` means `#IDENT/0 value`, you can use this to define constant.
-$console.log(console, 'version:')/1                                             // `$IDENT(this, ...thisArgs) ...args` equals to `$IDENT.bind(this, ...thisArgs)(...Args)`.
-    version                                                                     // for `/N` followed `$IDENT(...args)` directly, 'v0.0.1' was used, instead of 'version'.
+#version/Markplus.version                                                       // `#IDENT/value` means `#IDENT/0 value`, you can use this to define constant.
+$console.log(console, '    version:')/1, '\n}\n'                                // `$IDENT(this, ...thisArgs) ...args` equals to `$IDENT.bind(this, ...thisArgs)(...Args)`.
+    `'${version}',`                                                             // for `/N` followed `$IDENT(...args)` directly, 'v0.0.1' was used, instead of 'version'.
 $_/'equals to `$_/0 ...`'                                                       // notice that the `...args` will be execute for `/N` followed `IDENT` directly without white-space.
 $_ /:120                                                                        // `/:n` = `/N` , N = n - 25
 The codes above is equivalent to those:
@@ -38,7 +38,7 @@ The codes above is equivalent to those:
         '    Author:'                                                               // the execution result would be used instead of convert to string.
     )
     _L6 = (
-        "'github.com/zhengxiaoyao0716',\n}"
+        "'github.com/zhengxiaoyao0716',"
     )
     console.log(
         _L5,
@@ -54,9 +54,9 @@ The codes above is equivalent to those:
 
     // L12
     const hitokoto = function (
-        a, b, c
+        ...words
     ) { return (
-        [a, b, c][parseInt(Math.random() * 3)]                       // `#IDENT(...args) ...results` used to define a function, `()` can be omitted if no arguments.
+        [...words][parseInt(Math.random() * words.length)]          // `#IDENT(...args) ...results` used to define a function, `()` can be omitted if no arguments.
     ); };
     // L13
     const lang = function () {
@@ -98,18 +98,15 @@ The codes above is equivalent to those:
     const version = _version();
     // L22
     _L23 = (
-        version                                                                     // for `/N` followed `$IDENT(...args)` directly, 'v0.0.1' was used, instead of 'version'
+        `'${version}',`                                                             // for `/N` followed `$IDENT(...args)` directly, 'v0.0.1' was used, instead of 'version'.
     );
-    _L24 = (
-        void(
-            'equals to `$_/0 ...`'                                                       // notice that the `...args` will be execute for `/N` followed `IDENT` directly without white-space.
-        )
+    console.log.bind(console, '    version:')(
+        _L23, '\n}\n'                                // `$IDENT(this, ...thisArgs) ...args` equals to `$IDENT.bind(this, ...thisArgs)(...Args)`.
     );
-    console.log.bind(console, 'version:')(
-        _L23,
-        _L24                                             // `$IDENT(this, ...thisArgs) ...args` equals to `$IDENT.bind(this, ...thisArgs)(...Args)`.
+    // 24
+    void(
+        'equals to `$_/0 ...`'                                                       // notice that the `...args` will be execute for `/N` followed `IDENT` directly without white-space.
     );
-
     // L25
     void(
         ",,,"                                                                        // `/:n` = `/N` , N = n - 25
@@ -118,17 +115,23 @@ The codes above is equivalent to those:
 
 
 
+
+
+
 # Markplus
 $lang/2
 ## The strengthening of the `Markdown`. (<a href='?lang=zh'>中文版？</a>)
 ## `Markdown` 的加强 (<a href='?lang=en'>English?</a>)
+$hitokoto/2
+> 爱冷剑，怜悲箫，月下狼孤啸；轻点画，慢勾描，云中人逍遥。
+> https://github.com/zhengxiaoyao0716
 
 ---
 $lang/2
 ## Usage
 ## 用法
-``` shell
-markplus ReadMe.mp -h
+``` bash
+markplus -h
 ```
 
 ---
@@ -181,3 +184,7 @@ Precompiled\ Runtime-render.
 $lang/2
 ## But, All the premises: Keep Simple.
 ## 但是，一切的前提是：保持简单
+
+***
+#trueHitokoto(url) fetch(url).then(r => r.json()).then(({ hitokoto, from }) => `<span class="Block">${hitokoto} --from: ${from}</span>`)
+$trueHitokoto 'https://sslapi.hitokoto.cn/'

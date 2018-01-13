@@ -1,4 +1,5 @@
 const Markplus = {
+    get version() { return ''; },
     elements: [],
     renders: [
         [
@@ -7,14 +8,6 @@ const Markplus = {
                 const ele = document.createElement('span');
                 ele.innerHTML = `${payload}<br>`;
                 ele.classList.add('String');
-                return ele;
-            },
-        ],
-        [
-            payload => payload instanceof Promise,
-            () => {
-                const ele = document.createElement('span');
-                ele.classList.add('Promise');
                 return ele;
             },
         ],
@@ -33,7 +26,7 @@ const Markplus = {
     ],
     decorators: [
         (ele, at) => ele.setAttribute('data-markplus-at', at),
-        (ele, at) => ele.id = `L${at}`,
+        (ele, at) => ele.id || (ele.id = `L${at}`),
     ],
     register(at, payload) {
         const ele = this.renders.find(([cond]) => cond(payload))[1](payload);

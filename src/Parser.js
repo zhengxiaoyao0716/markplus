@@ -135,11 +135,55 @@ export class Code extends Element {
     }
 }
 export class Divider extends Element {
+    static symbol = ['---', '***'];
     constructor(line: string, at: number) {
         super(1, line, {}, at);
     }
     get json() {
         return { tag: 'span', html: '<br>', class: 'Divider' };
+    }
+}
+export class Block extends Element {
+    static regex = /^(>+)\s/;
+    constructor(line: string, indent: number, at: number) {
+        super(-1, line, {}, at);
+        this.indents = [indent];
+    }
+    get json() {
+        const fold = (input: []) => {
+            const output: [[]] = [];
+            input.forEach(({ indent, content }) => {
+                if (indent == 1) {
+                    output.unshift(content);
+                    return;
+                }
+                if (!(output[0] instanceof Array)) {
+                    output.unshift([]);
+                }
+                output[0].push({ indent: indent - 1, content });
+            });
+            return output.map(input => input instanceof Array ? fold(input) : input).reverse();
+        };
+        const folded = fold(this.lines.map((line, index) => {
+            const indent = this.indents[index];
+            const content = `<span>${line.match(Block.regex) ? line.slice(1 + indent) : line}</span>`;
+            return { indent, content };
+        }));
+        const map = (folded: []) => folded.map(line =>
+            line instanceof Array ? `<span class="Block">${map(line)}</span>` : `${line}<br>`
+        ).join('');
+        return { tag: 'span', html: map(folded), class: 'Block' };
+    }
+    push(line: string, at: number) { // eslint-disable-line no-unused-vars
+        this.lines.push(line);
+        const mathced = line.match(Block.regex);
+        this.indents.push(mathced ? mathced[1].length : this.indents[this.indents.length - 1]);
+    }
+    completed(line: string, at: number) {
+        if (line == '') {
+            this.size = this.lines.length;
+        }
+        return super.completed(line, at);
     }
 }
 
@@ -152,6 +196,9 @@ const Parser = {
             },
             regex: /^(\s*\/:?\d+)?(.*)?$/,
             split(body: string) {
+                if (!body) {
+                    return { args: null, exec: false, hold: null, extra: null };
+                }
                 const { scopes, regex } = this;
                 let args;
                 let cursor = 0;
@@ -188,7 +235,7 @@ const Parser = {
                         return false;
                     }
                     cursor = 1 + index;
-                    args = body.slice(0, 1 + cursor);
+                    args = body.slice(0, cursor);
                 }
                 const matched = body.slice(cursor).match(regex);
                 if (matched == null) {
@@ -196,11 +243,14 @@ const Parser = {
                 }
                 const [, hold, extra] = matched;
                 if (!hold) {
+                    if (!extra) {
+                        return { args, exec: false };
+                    }
                     if (extra[0] == '/') {
-                        return { args, exec: true, hold: null, extra: extra.slice(1) };
+                        return { args, exec: true, extra: extra.slice(1) };
                     }
                     if (extra[0] == ' ') {
-                        return { args, exec: false, hold: null, extra: extra.slice(1) };
+                        return { args, exec: false, extra: extra.slice(1) };
                     }
                 }
                 const exec = hold != null && hold[0] == '/';
@@ -239,10 +289,7 @@ const Parser = {
     HTMLElement: {
         enum: {
             pipe(line: string, at: number): Element {
-                return new (({
-                    '---': Divider,
-                    '***': Divider,
-                })[line] || Plain)(line, at);
+                return new (Divider.symbol.reduce((o, s) => (o[s] = Divider, o), {})[line] || Plain)(line, at);
             },
         },
         regex: /^(\S*)\s(.*)$/,
@@ -252,15 +299,17 @@ const Parser = {
                 return this.enum.pipe(line, at);
             }
             const [, type, content] = matched;
+            const length = type.length || 1;
             const pipe = ({
-                ...(o => (o['#'.repeat(type.length || 1)] = content => new Header(line, type.length, content, at), o))({}),
+                ...(o => (o['#'.repeat(length)] = () => new Header(line, type.length, content, at), o))({}),
                 ...Code.symbol.reduce((o, s) => (o[s] = () => new Code(line, s, content, at), o), {}),
+                ...(o => (o['>'.repeat(length)] = () => new Block(line, length, at), o))({}),
                 '': () => line.startsWith('    ') ? false : new Plain(line, at), // 4 white-space means code.
             })[type];
             if (!pipe) {
                 return new Plain(line, at, { type, content });
             }
-            return pipe(content);
+            return pipe();
         },
     },
     pipe(line: string, at: number): Element {
