@@ -6,7 +6,7 @@ import commander from 'commander';
 import pkg from './../package.json';
 import Markplus from './core';
 
-const launch = name => `<div id="markplus" class="Markplus"></div><script>${name}.default(document.querySelector('#markplus'));</script>`;
+const launch = name => `<div id="markplus"></div><script>${name}.default(document.querySelector('#markplus'));</script>`;
 
 const opts = (name: string) => {
     if (!name) {

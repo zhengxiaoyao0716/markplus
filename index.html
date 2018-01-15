@@ -125,6 +125,9 @@
         get version() {
             return '';
         },
+        container: function (container) {
+            return container.classList.add('Markplus'), container;
+        }(document.createElement('div')),
         elements: [],
         renders: [[function (payload) {
             return typeof payload == 'string';
@@ -168,13 +171,12 @@
                 return decorator(ele, at, payload);
             });
             Markplus.elements[at] = ele;
+            this.container.appendChild(ele);
         }
     };
 
     exports.default = /** @param {HTMLElement} container */function (container) {
-        return Markplus.elements.forEach( /** @param {HTMLElement} ele */function (ele) {
-            return container.appendChild(ele);
-        });
+        return container.appendChild(Markplus.container);
     };
 
     Markplus.__defineGetter__('version', function () {
@@ -332,4 +334,4 @@
     Markplus.register(199, { "tag": "span", "html": "<br>", "class": "Plain" });
 });
 </script>
-<div id="markplus" class="Markplus"></div><script>Markplus.default(document.querySelector('#markplus'));</script>
+<div id="markplus"></div><script>Markplus.default(document.querySelector('#markplus'));</script>

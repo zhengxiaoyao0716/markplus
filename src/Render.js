@@ -1,5 +1,6 @@
 const Markplus = {
     get version() { return ''; },
+    container: (container => (container.classList.add('Markplus'), container))(document.createElement('div')),
     elements: [],
     renders: [
         [
@@ -32,7 +33,8 @@ const Markplus = {
         const ele = this.renders.find(([cond]) => cond(payload))[1](payload);
         this.decorators.forEach(decorator => decorator(ele, at, payload));
         Markplus.elements[at] = ele;
+        this.container.appendChild(ele);
     },
 };
 
-export default /** @param {HTMLElement} container */ container => Markplus.elements.forEach(/** @param {HTMLElement} ele */ ele => container.appendChild(ele));
+export default /** @param {HTMLElement} container */ container => container.appendChild(Markplus.container);
