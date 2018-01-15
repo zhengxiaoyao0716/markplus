@@ -24,6 +24,9 @@
     "url": "https://github.com/zhengxiaoyao0716/markplus/issues"
   },
   "homepage": "https://github.com/zhengxiaoyao0716/markplus#readme",
+  "dependencies": {
+    "babel-core": "^6.26.0"
+  },
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-eslint": "^8.0.2",

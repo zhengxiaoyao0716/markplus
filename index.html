@@ -178,7 +178,7 @@
     };
 
     Markplus.__defineGetter__('version', function () {
-        return '0.0.5';
+        return '0.1.0';
     });
 
     Markplus.renders.unshift([function (payload) {
@@ -198,12 +198,6 @@
     });
     hljs && Markplus.decorators.push(function (ele) {
         return ele.classList.contains('Code') && hljs.highlightBlock(ele);
-    });
-    [Markplus.catalog = /** @param {HTMLElement} ele */function (ele) {
-        return console.log(ele);
-    }];
-    Markplus.decorators.push(function (ele) {
-        return ele.classList.contains('Header') && Markplus.catalog(ele);
     });
 
     /* dump */

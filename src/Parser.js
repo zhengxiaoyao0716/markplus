@@ -101,13 +101,13 @@ export class Header extends Element {
         super(1, line, { level, content }, at);
         this.level = level;
         this.content = content;
+        this.id = this.content.trim().split(/[\s-]+/).join('-');
     }
     get json() {
-        const id = this.content.split(/[\s-]+/).join('-');
         return {
             tag: 'span',
-            id,
-            html: `<span id="${id}">${this.content}</span><br>`,
+            id: this.id,
+            html: `<span id="${this.id}">${this.content}</span><br>`,
             class: `Header Header-${this.level}`,
             'data-markplus-header-level': this.level,
         };
