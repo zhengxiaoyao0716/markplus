@@ -107,7 +107,7 @@ export class Header extends Element {
         return {
             tag: 'span',
             id: this.id,
-            html: `<span id="${this.id}">${this.content}</span><br>`,
+            html: `<span>${this.content}</span><br>`,
             class: `Header Header-${this.level}`,
             'data-markplus-header-level': this.level,
         };
