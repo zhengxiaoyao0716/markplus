@@ -5,11 +5,23 @@ import commander from 'commander';
 
 import pkg from './../package.json';
 import Markplus from './core';
-import PluginStyleDefault from './plugin/style-default';
 
-const babelrc = JSON.parse(fs.readFileSync(path.join(__dirname, './../.babelrc'), 'utf-8'));
 const launch = name => `<div id="markplus" class="Markplus"></div><script>${name}.default(document.querySelector('#markplus'));</script>`;
 
+const opts = (name: string) => {
+    if (!name) {
+        name = '.markplusrc';
+        if (!fs.existsSync(name)) {
+            return {};
+        }
+    }
+    if (name.endsWith('rc') || name.endsWith('.json')) {
+        return JSON.parse(fs.readFileSync(path.join(process.cwd(), name)));
+    }
+    return require(name).default;
+};
+
+const babelrc = JSON.parse(fs.readFileSync(path.join(__dirname, './../.babelrc'), 'utf-8'));
 const transform = (code, name) => babel.transform(code, { ...babelrc, plugins: ['transform-es2015-modules-umd'], filename: name });
 
 const compile = () => {
@@ -18,7 +30,7 @@ const compile = () => {
         throw new Error('missing input file.');
     }
     const name = commander.args[1];
-    Markplus.from(fs.readFileSync(input, 'utf-8'), name, { plugin: [PluginStyleDefault] })
+    Markplus.from(fs.readFileSync(input, 'utf-8'), name, opts(commander.config))
         .then(mp => ({ ...mp, code: mp.code() }))
         .then(mp => commander.transform ? ({ ...mp, ...transform(mp.code, mp.name) }) : mp)
         .then(({ code, name, plugin }) => commander.js ? code : [
@@ -39,6 +51,7 @@ commander.version(pkg.version).usage('[options] INPUT <name> ...');
     ['--html', 'Compile to html'],
     ['--js', 'Compile to javascript'],
     ['-o, --out [file]', 'Write the output into the file.'],
+    ['-c, --config [.markplusrc|json|config.js]', 'Read the config from the file.'],
     ['--no-transform', 'With out babel transform.'],
 ].forEach(([...args]) => commander.option(...args));
 commander.parse(process.argv);

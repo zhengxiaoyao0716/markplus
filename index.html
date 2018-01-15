@@ -1,6 +1,4 @@
 <!-- Markplus: Markplus -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.12.0/build/styles/vs2015.min.css">
-<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.12.0/build/highlight.min.js"></script>
 <style>
 .Markplus {
     font-family: arial,tahoma,'Microsoft Yahei','\5b8b\4f53',sans-serif;
@@ -49,6 +47,8 @@
 }
 
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.12.0/build/styles/vs2015.min.css">
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.12.0/build/highlight.min.js"></script>
 <script>
 (function (global, factory) {
     if (typeof define === "function" && define.amd) {
@@ -178,12 +178,9 @@
     };
 
     Markplus.__defineGetter__('version', function () {
-        return '0.0.4';
+        return '0.0.5';
     });
 
-    hljs && Markplus.decorators.push(function (ele) {
-        return ele.classList.contains('Code') && hljs.highlightBlock(ele);
-    });
     Markplus.renders.unshift([function (payload) {
         return payload instanceof Promise;
     }, function (payload) {
@@ -198,6 +195,15 @@
         return ele.classList.contains('Header') && ele.addEventListener('click', function () {
             return location.hash = payload.id;
         });
+    });
+    hljs && Markplus.decorators.push(function (ele) {
+        return ele.classList.contains('Code') && hljs.highlightBlock(ele);
+    });
+    [Markplus.catalog = /** @param {HTMLElement} ele */function (ele) {
+        return console.log(ele);
+    }];
+    Markplus.decorators.push(function (ele) {
+        return ele.classList.contains('Header') && Markplus.catalog(ele);
     });
 
     /* dump */

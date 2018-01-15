@@ -4,10 +4,10 @@ import path from 'path';
 import Parser, * as Types from './Parser';
 import PluginRenderCode from './plugin/render-code';
 import PluginRenderPromise from './plugin/render-promise';
-import pkg from './../package.json';
+import PluginStyleDefault from './plugin/style-default';
 
 const Render = fs.readFileSync(path.join(__dirname, './../src/Render.js'), 'utf-8');
-const CorePlugin = (self: Markplus) => {
+const CorePlugin = (self: Markplus, pkg: { version: string }) => {
     if (!self.name) {
         const firstH1: Types.Header = self.elements.find(ele => ele instanceof Types.Header && ele.level == 1);
         self.name = firstH1 ? `${firstH1.content}` : `_${new Date().getTime()}`;
@@ -21,10 +21,12 @@ const CorePlugin = (self: Markplus) => {
         ].join('\n'),
     };
 };
+import pkg from './../package.json';
 const corePlugins = [
-    CorePlugin,
-    PluginRenderCode,
+    [CorePlugin, pkg],
     PluginRenderPromise,
+    PluginStyleDefault,
+    PluginRenderCode,
 ];
 export type Plugin = (self: Markplus) => {
     head: () => string,
@@ -32,7 +34,7 @@ export type Plugin = (self: Markplus) => {
     dump: () => string,
 };
 export type Options = {
-    plugin: [string | Plugin],
+    plugin: [string | Plugin | [string | Plugin]],
 };
 
 export default class Markplus {
@@ -49,7 +51,8 @@ export default class Markplus {
         this.plugin = (() => {
             const pluginNames = new Set();
             const plugins = [...corePlugins, ...opts.plugin || []].map(payload => {
-                const plugin: Plugin = payload instanceof Function ? payload : require(`markplus-plugin-${payload}`).default;
+                const [nameOrPlugin, ...args] = payload instanceof Array ? payload : [payload];
+                const plugin: Plugin = nameOrPlugin instanceof Function ? nameOrPlugin : require(`markplus-plugin-${nameOrPlugin}`).default;
                 const name = plugin.name;
                 if (!name) {
                     throw new Error('Invalid plugin.');
@@ -58,8 +61,8 @@ export default class Markplus {
                     console.warn(new Error(`plugin name (${name}) conflict.`).stack.replace(/^Error/, 'Warning')); // eslint-disable-line no-console
                 }
                 pluginNames.add(name);
-                return plugin;
-            }).map(plugin => plugin(this));
+                return plugin(this, ...args);
+            });
             return (action: string): string => plugins.map(p => p[action] && p[action]()).filter(code => code != null);
         })();
     }
