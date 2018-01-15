@@ -15,8 +15,9 @@ const opts = (name: string) => {
             return {};
         }
     }
+    name = path.join(process.cwd(), name);
     if (name.endsWith('rc') || name.endsWith('.json')) {
-        return JSON.parse(fs.readFileSync(path.join(process.cwd(), name)));
+        return JSON.parse(fs.readFileSync(name));
     }
     return require(name).default;
 };
