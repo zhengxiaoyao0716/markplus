@@ -72,4 +72,6 @@ export default class Markplus {
         '\n/* dump */\n',
         ...this.plugin('dump'),
     ].join('\n'));
+
+    __dirname = __dirname;
 }
