@@ -2,7 +2,7 @@
 <style>
 .Markplus {
     font-family: arial,tahoma,'Microsoft Yahei','\5b8b\4f53',sans-serif;
-    padding: 20px;
+    margin: 20px;
     line-height: 1.5;
 }
 .Markplus .Target {
@@ -36,6 +36,7 @@
 .Markplus .Header.Header-5 {
     font-size: 1em;
 }
+
 .Markplus .Divider {
     border-top: 1px solid #eee;
 }
@@ -45,10 +46,17 @@
     border-left: 3px solid #eee;
     padding-left: 12px;
 }
+.Markplus .Code {
+    overflow-x: auto;
+    word-break: keep-all;
+    white-space: nowrap;
+    margin-bottom: 16px;
+    padding: 16px;
+    background: #eee;
+}
 
 </style>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.12.0/build/styles/vs2015.min.css">
-<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.12.0/build/highlight.min.js"></script>
+<style>body { margin: 0; width: 100%; height: 100%; }</style>
 <script>
 (function (global, factory) {
     if (typeof define === "function" && define.amd) {
@@ -197,9 +205,6 @@
         return ele.classList.contains('Header') && ele.addEventListener('click', function () {
             return location.hash = payload.id;
         });
-    });
-    hljs && Markplus.decorators.push(function (ele) {
-        return ele.classList.contains('Code') && hljs.highlightBlock(ele);
     });
 
     /* dump */

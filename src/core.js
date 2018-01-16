@@ -2,7 +2,6 @@ import fs from 'fs';
 import path from 'path';
 
 import Parser, * as Types from './Parser';
-import PluginRenderCode from './plugin/render-code';
 import PluginRenderPromise from './plugin/render-promise';
 import PluginStyleDefault from './plugin/style-default';
 
@@ -27,7 +26,6 @@ const corePlugins = [
     [CorePlugin, pkg],
     PluginRenderPromise,
     PluginStyleDefault,
-    PluginRenderCode,
 ];
 export type Plugin = (self: Markplus) => {
     head: () => string,

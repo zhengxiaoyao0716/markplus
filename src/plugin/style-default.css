@@ -1,6 +1,6 @@
 .Markplus {
     font-family: arial,tahoma,'Microsoft Yahei','\5b8b\4f53',sans-serif;
-    padding: 20px;
+    margin: 20px;
     line-height: 1.5;
 }
 .Markplus .Target {
@@ -34,6 +34,7 @@
 .Markplus .Header.Header-5 {
     font-size: 1em;
 }
+
 .Markplus .Divider {
     border-top: 1px solid #eee;
 }
@@ -42,4 +43,12 @@
     position: relative;
     border-left: 3px solid #eee;
     padding-left: 12px;
+}
+.Markplus .Code {
+    overflow-x: auto;
+    word-break: keep-all;
+    white-space: nowrap;
+    margin-bottom: 16px;
+    padding: 16px;
+    background: #eee;
 }

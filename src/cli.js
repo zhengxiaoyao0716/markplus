@@ -36,6 +36,7 @@ const compile = () => {
         .then(mp => commander.transform ? ({ ...mp, ...transform(mp.code, mp.name) }) : mp)
         .then(({ code, name, plugin }) => commander.js ? code : [
             ...plugin('head'),
+            '<style>body { margin: 0; width: 100%; height: 100%; }</style>',
             `<script>\n${code}\n</script>`,
             launch(name),
             '',
