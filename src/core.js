@@ -66,6 +66,7 @@ export default class Markplus {
         })();
     }
 
+    head = () => this.plugin('head').join('\n');
     code = () => ([
         '\n/* code */\n',
         ...this.plugin('code'),

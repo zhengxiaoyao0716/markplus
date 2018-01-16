@@ -6,8 +6,6 @@ import commander from 'commander';
 import pkg from './../package.json';
 import Markplus from './core';
 
-const launch = name => `<div id="markplus"></div><script>${name}.default(document.querySelector('#markplus'));</script>`;
-
 const opts = (name: string) => {
     if (!name) {
         name = '.markplusrc';
@@ -23,7 +21,9 @@ const opts = (name: string) => {
 };
 
 const babelrc = JSON.parse(fs.readFileSync(path.join(__dirname, './../.babelrc'), 'utf-8'));
-const transform = (code, name) => babel.transform(code, { ...babelrc, plugins: ['transform-es2015-modules-umd'], filename: name });
+const head = ({ head }) => head();
+const code = ({ code, name }) => commander.transform ? babel.transform(code(), { ...babelrc, plugins: ['transform-es2015-modules-umd'], filename: name }).code : code();
+const launch = ({ name }) => `<div id="markplus"></div><script>${name}.default(document.querySelector('#markplus'));</script>`;
 
 const compile = () => {
     const input = commander.args[0]; // eslint-disable-line no-console
@@ -32,13 +32,11 @@ const compile = () => {
     }
     const name = commander.args[1];
     Markplus.from(fs.readFileSync(input, 'utf-8'), name, opts(commander.config))
-        .then(mp => ({ ...mp, code: mp.code() }))
-        .then(mp => commander.transform ? ({ ...mp, ...transform(mp.code, mp.name) }) : mp)
-        .then(({ code, name, plugin }) => commander.js ? code : [
-            ...plugin('head'),
+        .then(mp => commander.only ? ({ head, code })[commander.only](mp) : [
+            head(mp),
             '<style>body { margin: 0; width: 100%; height: 100%; }</style>',
-            `<script>\n${code}\n</script>`,
-            launch(name),
+            `<script>\n${code(mp)}\n</script>`,
+            launch(mp),
             '',
         ].join('\n'))
         .then(output =>
@@ -50,10 +48,9 @@ const compile = () => {
 
 commander.version(pkg.version).usage('[options] INPUT <name> ...');
 [
-    ['--html', 'Compile to html'],
-    ['--js', 'Compile to javascript'],
-    ['-o, --out [file]', 'Write the output into the file.'],
-    ['-c, --config [.markplusrc|json|config.js]', 'Read the config from the file.'],
+    ['--only <head|code>', 'Only output the specific part.'],
+    ['-o, --out <file>', 'Write the output into the file.'],
+    ['-c, --config <.markplusrc|json|config.js>', 'Read the config from the file.'],
     ['--no-transform', 'With out babel transform.'],
 ].forEach(([...args]) => commander.option(...args));
 commander.parse(process.argv);

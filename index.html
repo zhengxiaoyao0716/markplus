@@ -55,6 +55,7 @@
 }
 
 </style>
+<style>/* https://highlightjs.org/static/demo/styles/vs2015.css */.Markplus .Code.hljs{display:block;overflow-x:auto;background:#1E1E1E;color:#DCDCDC}.hljs-keyword,.hljs-literal,.hljs-symbol,.hljs-name{color:#569CD6}.hljs-link{color:#569CD6;text-decoration:underline}.hljs-built_in,.hljs-type{color:#4EC9B0}.hljs-number,.hljs-class{color:#B8D7A3}.hljs-string,.hljs-meta-string{color:#D69D85}.hljs-regexp,.hljs-template-tag{color:#9A5334}.hljs-subst,.hljs-function,.hljs-title,.hljs-params,.hljs-formula{color:#DCDCDC}.hljs-comment,.hljs-quote{color:#57A64A;font-style:italic}.hljs-doctag{color:#608B4E}.hljs-meta,.hljs-meta-keyword,.hljs-tag{color:#9B9B9B}.hljs-variable,.hljs-template-variable{color:#BD63C5}.hljs-attr,.hljs-attribute,.hljs-builtin-name{color:#9CDCFE}.hljs-section{color:gold}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}.hljs-bullet,.hljs-selector-tag,.hljs-selector-id,.hljs-selector-class,.hljs-selector-attr,.hljs-selector-pseudo{color:#D7BA7D}.hljs-addition{background-color:#144212;display:inline-block;width:100%}.hljs-deletion{background-color:#600;display:inline-block;width:100%}</style>
 <style>body { margin: 0; width: 100%; height: 100%; }</style>
 <script>
 (function (global, factory) {
@@ -187,7 +188,7 @@
     };
 
     Markplus.__defineGetter__('version', function () {
-        return '0.2.7';
+        return '0.2.8';
     });
 
     Markplus.renders.unshift([function (payload) {
@@ -282,23 +283,23 @@
     Markplus.register(125, { "tag": "span", "html": "<br>", "class": "Plain" });
     Markplus.register(126, { "tag": "span", "html": "<br>", "class": "Divider" });
     Markplus.register(127, lang({ "tag": "span", "id": "用法", "html": "<span>用法</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2 }, { "tag": "span", "id": "Usage", "html": "<span>Usage</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2 }));
-    Markplus.register(130, { "tag": "pre", "html": "markplus -h", "class": "Code Code-bash" });
+    Markplus.register(130, { "tag": "pre", "html": "<span class=\"hljs-keyword\">markplus </span>-h", "class": "Code Code-bash hljs language-armasm" });
     Markplus.register(133, { "tag": "span", "html": "<br>", "class": "Plain" });
     Markplus.register(134, { "tag": "span", "html": "<br>", "class": "Divider" });
     Markplus.register(135, lang({ "tag": "span", "id": "插件", "html": "<span>插件</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2 }, { "tag": "span", "id": "Plugin", "html": "<span>Plugin</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2 }));
     Markplus.register(138, { "tag": "span", "id": "Via-`.markplusrc`:", "html": "<span>Via `.markplusrc`:</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 });
-    Markplus.register(139, { "tag": "pre", "html": "{ \"plugin\": [\"PLUGIN_NAME\"] }", "class": "Code Code-json" });
+    Markplus.register(139, { "tag": "pre", "html": "{ <span class=\"hljs-attr\">\"plugin\"</span>: [<span class=\"hljs-string\">\"PLUGIN_NAME\"</span>] }", "class": "Code Code-json hljs language-json" });
     Markplus.register(142, { "tag": "span", "html": "Then Markplus will auto load `.markplusrc`.<br>", "class": "Plain" });
     Markplus.register(143, { "tag": "span", "html": "<br>", "class": "Plain" });
     Markplus.register(144, { "tag": "span", "id": "Via-`*rc`-,-`*.json`:", "html": "<span>Via `*rc` , `*.json`:</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 });
     Markplus.register(145, { "tag": "span", "html": "Similar to `.markplusrc`, but you should use `markplus -c <config.json> ...` to load it.<br>", "class": "Plain" });
     Markplus.register(146, { "tag": "span", "html": "<br>", "class": "Plain" });
     Markplus.register(147, { "tag": "span", "id": "Via-JavaScript-module:", "html": "<span>Via JavaScript module:</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 });
-    Markplus.register(148, { "tag": "pre", "html": "exports.default = { plugin: [require('./MARKPLUS_PLUGIN_MODULE').default] };", "class": "Code Code-nodejs" });
+    Markplus.register(148, { "tag": "pre", "html": "exports.<span class=\"hljs-keyword\">default</span> = { plugin: [<span class=\"hljs-built_in\">require</span>(<span class=\"hljs-string\">'./MARKPLUS_PLUGIN_MODULE'</span>).<span class=\"hljs-keyword\">default</span>] };", "class": "Code Code-nodejs hljs language-coffeescript" });
     Markplus.register(151, { "tag": "span", "html": "Then use `markplus -c <module.js> ...` to load it.<br>", "class": "Plain" });
     Markplus.register(152, { "tag": "span", "html": "<br>", "class": "Plain" });
     Markplus.register(153, { "tag": "span", "id": "Config-with-arguments:", "html": "<span>Config with arguments:</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 });
-    Markplus.register(154, { "tag": "pre", "html": "const config = {\n    plugin: [\n        [\"PLUGIN_NAME\" || require('PLUGIN_MODULE'), ...PLUGIN_ARGS]\n    ]\n};", "class": "Code Code-javascript" });
+    Markplus.register(154, { "tag": "pre", "html": "<span class=\"hljs-keyword\">const</span> config = {\n    <span class=\"hljs-attr\">plugin</span>: [\n        [<span class=\"hljs-string\">\"PLUGIN_NAME\"</span> || <span class=\"hljs-built_in\">require</span>(<span class=\"hljs-string\">'PLUGIN_MODULE'</span>), ...PLUGIN_ARGS]\n    ]\n};", "class": "Code Code-javascript hljs language-javascript" });
     Markplus.register(161, { "tag": "span", "html": "<br>", "class": "Plain" });
     Markplus.register(162, { "tag": "span", "html": "<br>", "class": "Plain" });
     Markplus.register(163, { "tag": "span", "html": "<br>", "class": "Divider" });
