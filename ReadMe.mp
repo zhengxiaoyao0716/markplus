@@ -133,6 +133,35 @@ markplus -h
 
 ---
 $lang/2
+## 插件
+## Plugin
+### Via `.markplusrc`:
+``` json
+{ "plugin": ["PLUGIN_NAME"] }
+```
+Then Markplus will auto load `.markplusrc`.
+
+### Via `*rc` , `*.json`:
+Similar to `.markplusrc`, but you should use `markplus -c <config.json> ...` to load it.
+
+### Via JavaScript module:
+``` nodejs
+exports.default = { plugin: [require('./MARKPLUS_PLUGIN_MODULE').default] };
+```
+Then use `markplus -c <module.js> ...` to load it.
+
+### Config with arguments:
+``` javascript
+const config = {
+    plugin: [
+        ["PLUGIN_NAME" || require('PLUGIN_MODULE'), ...PLUGIN_ARGS]
+    ]
+};
+```
+
+
+---
+$lang/2
 ## 基础目标
 ## Base goal
 $lang/2
@@ -177,15 +206,18 @@ $lang/2
 预编译、运行时渲染
 Precompiled\ Runtime-render.
 
-***
+---
 $lang/2
 ## 但是，一切的前提是：保持简单
 ## But, All the premises: Keep Simple.
 
-***
+---
+---
 $hitokoto/2
-> 爱冷剑，怜悲箫，月下狼孤啸；轻点画，慢勾描，云中人逍遥。
-> https://github.com/zhengxiaoyao0716
+> 我的个性签名：爱冷剑，怜悲箫，月下狼孤啸；轻点画，慢勾描，云中人逍遥。
+> 我的GitHub：https://github.com/zhengxiaoyao0716
+
+***
 #remoteHitokoto(url) /4.then(content => `<span class="Block">${content}</span>`)
     'a'.charCodeAt(0) + parseInt(Math.random() * 4)
     (charCode) String.fromCharCode(charCode)

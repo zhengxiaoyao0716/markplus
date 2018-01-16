@@ -46,8 +46,6 @@
 }
 .Markplus .Code {
     overflow-x: auto;
-    word-break: keep-all;
-    white-space: nowrap;
     margin-bottom: 16px;
     padding: 16px;
     background: #eee;

@@ -1,5 +1,5 @@
 export class Element {
-    constructor(size: number, line: string, params: any, at: number) {
+    constructor(size: number, line: string, at: number, params: any) {
         this.type = this.constructor.name;
         this.size = size;
         const lines: [string | Element] = [line];
@@ -17,8 +17,8 @@ export class Element {
     dump() { return `Markplus.register(${this.at}, ${JSON.stringify({ ...this.json })});`; }
 }
 export class Invalid extends Element {
-    constructor(line: string, reason: string, at: number) {
-        super(1, line, { reason }, at);
+    constructor(line: string, at: number, reason: string) {
+        super(1, line, at, { reason });
     }
     dump() { return `console.error(${JSON.stringify(this)});`; }
 }
@@ -26,19 +26,19 @@ export class Save extends Element {
     push(line: string, at: number) { // eslint-disable-line no-unused-vars
         const splited = Parser.Function.body.split(line.trim());
         if (!splited) {
-            this.lines.push(new Invalid(line, `child function of (${this.params.name}) syntax invalid.`));
+            this.lines.push(new Invalid(line, at, `child function of (${this.params.name}) syntax invalid.`));
             return;
         }
         const { args, exec, hold, extra } = splited;
         if (exec) {
-            this.lines.push(new Invalid(line, 'multi-lines functions cannot have immediately child function.'));
+            this.lines.push(new Invalid(line, at, 'multi-lines functions cannot have immediately child function.'));
             return;
         }
         if (hold) {
-            this.lines.push(new Invalid(line, 'nested multi-lines functions not support.'));
+            this.lines.push(new Invalid(line, at, 'nested multi-lines functions not support.'));
             return;
         }
-        this.lines.push(new Save(1, line, { args, extra }, at));
+        this.lines.push(new Save(1, line, at, { args, extra }));
     }
     dump() {
         const { name, args, exec, extra = '' } = this.params;
@@ -82,7 +82,7 @@ export class Load extends Element {
 }
 export class Comments extends Element {
     constructor(line: string, at: number) {
-        super(1, line, null, at);
+        super(1, line, at, null);
     }
     get json() {
         return { tag: 'span', html: `<!-- ${this.lines[0]} -->`, class: 'Comments' };
@@ -90,15 +90,15 @@ export class Comments extends Element {
 }
 export class Plain extends Element {
     constructor(line: string, at: number, mathced?: [string]) {
-        super(1, line, { mathced }, at);
+        super(1, line, at, { mathced });
     }
     get json() {
         return { tag: 'span', html: `${this.lines[0]}<br>`, class: 'Plain' };
     }
 }
 export class Header extends Element {
-    constructor(line: string, level: number, content: string, at: number) {
-        super(1, line, { level, content }, at);
+    constructor(line: string, at: number, level: number, content: string) {
+        super(1, line, at, { level, content });
         this.level = level;
         this.content = content;
         this.id = this.content.trim().split(/[\s-]+/).join('-');
@@ -115,15 +115,15 @@ export class Header extends Element {
 }
 export class Code extends Element {
     static symbol = ['~~~', '```'];
-    constructor(line: string, symbol: string, language: string, at: number) {
-        super(-1, line, { language }, at);
-        this.symbol = symbol;
-        this.language = language;
+    constructor(line: string, at: number, symbol?: string, language?: string) {
+        super(-1, line, at, { language });
+        this.symbol = symbol || line;
+        this.language = language || '';
     }
     get json() {
         return {
-            tag: 'span',
-            html: this.lines.slice(1, this.size - 1).map(line => `<span>${line}</span><br>`).join(''),
+            tag: 'pre',
+            html: this.lines.slice(1, this.size - 1).join('\n'),
             class: `Code Code-${this.language}`,
         };
     }
@@ -137,7 +137,7 @@ export class Code extends Element {
 export class Divider extends Element {
     static symbol = ['---', '***'];
     constructor(line: string, at: number) {
-        super(1, line, {}, at);
+        super(1, line, at, {});
     }
     get json() {
         return { tag: 'span', html: '<br>', class: 'Divider' };
@@ -145,8 +145,8 @@ export class Divider extends Element {
 }
 export class Block extends Element {
     static regex = /^(>+)\s/;
-    constructor(line: string, indent: number, at: number) {
-        super(-1, line, {}, at);
+    constructor(line: string, at: number, indent: number) {
+        super(-1, line, at, {});
         this.indents = [indent];
     }
     get json() {
@@ -266,7 +266,7 @@ const Parser = {
             const [, type, name, body] = match;
             const splited = this.body.split(body);
             if (!splited) {
-                return new Invalid(line, `unexpected body(${body}) `, at);
+                return new Invalid(line, at, `unexpected body(${body}).`);
             }
             const { args, exec, hold, extra } = splited;
             const holdSize =
@@ -276,20 +276,24 @@ const Parser = {
                         : parseInt(hold.slice(1))
                     : 0;
             if (holdSize < 0) {
-                return new Invalid(line, `unexpected size(${holdSize}), check: ${hold} `, at);
+                return new Invalid(line, at, `unexpected size(${holdSize}), check: ${hold}.`);
             }
             return new ({ $: Load, '#': Save })[type](
                 1 + holdSize,
                 line,
-                { name: name == '_' ? 'void' : name, args, exec, extra },
                 at,
+                { name: name == '_' ? 'void' : name, args, exec, extra },
             );
         },
     },
     HTMLElement: {
         enum: {
+            mapper: {
+                ...Divider.symbol.reduce((o, s) => (o[s] = Divider, o), {}),
+                ...Code.symbol.reduce((o, s) => (o[s] = Code, o), {}),
+            },
             pipe(line: string, at: number): Element {
-                return new (Divider.symbol.reduce((o, s) => (o[s] = Divider, o), {})[line] || Plain)(line, at);
+                return new (this.mapper[line] || Plain)(line, at);
             },
         },
         regex: /^(\S*)\s(.*)$/,
@@ -301,9 +305,9 @@ const Parser = {
             const [, type, content] = matched;
             const length = type.length || 1;
             const pipe = ({
-                ...(o => (o['#'.repeat(length)] = () => new Header(line, type.length, content, at), o))({}),
-                ...Code.symbol.reduce((o, s) => (o[s] = () => new Code(line, s, content, at), o), {}),
-                ...(o => (o['>'.repeat(length)] = () => new Block(line, length, at), o))({}),
+                ...(o => (o['#'.repeat(length)] = () => new Header(line, at, type.length, content), o))({}),
+                ...Code.symbol.reduce((o, s) => (o[s] = () => new Code(line, at, s, content), o), {}),
+                ...(o => (o['>'.repeat(length)] = () => new Block(line, at, length), o))({}),
                 '': () => line.startsWith('    ') ? false : new Plain(line, at), // 4 white-space means code.
             })[type];
             if (!pipe) {
@@ -313,7 +317,7 @@ const Parser = {
         },
     },
     pipe(line: string, at: number): Element {
-        return this.Function.pipe(line, at) || this.HTMLElement.pipe(line, at) || new Invalid(line, 'Unknown syantax.', at);
+        return this.Function.pipe(line, at) || this.HTMLElement.pipe(line, at) || new Invalid(line, at, 'Unknown syantax.');
     },
     parse(lines: [string]) {
         const elements = [new Comments('https://github.com/zhengxiaoyao0716/markplus', 0)];

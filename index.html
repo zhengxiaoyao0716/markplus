@@ -48,8 +48,6 @@
 }
 .Markplus .Code {
     overflow-x: auto;
-    word-break: keep-all;
-    white-space: nowrap;
     margin-bottom: 16px;
     padding: 16px;
     background: #eee;
@@ -188,7 +186,7 @@
     };
 
     Markplus.__defineGetter__('version', function () {
-        return '0.2.4';
+        return '0.2.5';
     });
 
     Markplus.renders.unshift([function (payload) {
@@ -283,33 +281,53 @@
     Markplus.register(125, { "tag": "span", "html": "<br>", "class": "Plain" });
     Markplus.register(126, { "tag": "span", "html": "<br>", "class": "Divider" });
     Markplus.register(127, lang({ "tag": "span", "id": "用法", "html": "<span>用法</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2 }, { "tag": "span", "id": "Usage", "html": "<span>Usage</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2 }));
-    Markplus.register(130, { "tag": "span", "html": "<span>markplus -h</span><br>", "class": "Code Code-bash" });
+    Markplus.register(130, { "tag": "pre", "html": "markplus -h", "class": "Code Code-bash" });
     Markplus.register(133, { "tag": "span", "html": "<br>", "class": "Plain" });
     Markplus.register(134, { "tag": "span", "html": "<br>", "class": "Divider" });
-    Markplus.register(135, lang({ "tag": "span", "id": "基础目标", "html": "<span>基础目标</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2 }, { "tag": "span", "id": "Base-goal", "html": "<span>Base goal</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2 }));
-    Markplus.register(138, lang({ "tag": "span", "id": "更完善的工具链", "html": "<span>更完善的工具链</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }, { "tag": "span", "id": "More-perfect-tool-chain.", "html": "<span>More perfect tool chain.</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }));
-    Markplus.register(141, lang({ "tag": "span", "html": "易用，易扩展<br>", "class": "Plain" }, { "tag": "span", "html": "Easy to embedded, Convenient extension.<br>", "class": "Plain" }));
-    Markplus.register(144, { "tag": "span", "html": "<br>", "class": "Plain" });
-    Markplus.register(145, lang({ "tag": "span", "id": "加强表格", "html": "<span>加强表格</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }, { "tag": "span", "id": "Strengthing-for-`Table`-.", "html": "<span>Strengthing for `Table` .</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }));
-    Markplus.register(148, lang({ "tag": "span", "html": "混合单元格，宏计算<br>", "class": "Plain" }, { "tag": "span", "html": "Multi-unit-grid, Macro calculate.<br>", "class": "Plain" }));
-    Markplus.register(151, { "tag": "span", "html": "<br>", "class": "Plain" });
-    Markplus.register(152, lang({ "tag": "span", "id": "更清晰的语义", "html": "<span>更清晰的语义</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }, { "tag": "span", "id": "Clearer-semantics.", "html": "<span>Clearer semantics.</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }));
-    Markplus.register(155, lang({ "tag": "span", "html": "何时换行，何时滚动<br>", "class": "Plain" }, { "tag": "span", "html": "When to break line, When to scroll.<br>", "class": "Plain" }));
-    Markplus.register(158, { "tag": "span", "html": "<br>", "class": "Plain" });
-    Markplus.register(159, lang({ "tag": "span", "id": "动态交互", "html": "<span>动态交互</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }, { "tag": "span", "id": "Dynamic-interactivity.", "html": "<span>Dynamic interactivity.</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }));
-    Markplus.register(162, lang({ "tag": "span", "html": "可选、可配置并且安全的动态演出<br>", "class": "Plain" }, { "tag": "span", "html": "Optional\\ configurable and safety dynamic perform.<br>", "class": "Plain" }));
-    Markplus.register(165, { "tag": "span", "html": "<br>", "class": "Plain" });
-    Markplus.register(166, lang({ "tag": "span", "id": "合理的结构", "html": "<span>合理的结构</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }, { "tag": "span", "id": "Reasonable-structure.", "html": "<span>Reasonable structure.</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }));
-    Markplus.register(169, lang({ "tag": "span", "html": "可复用，可继承<br>", "class": "Plain" }, { "tag": "span", "html": "Reusable, Inheritable.<br>", "class": "Plain" }));
-    Markplus.register(172, { "tag": "span", "html": "<br>", "class": "Plain" });
-    Markplus.register(173, lang({ "tag": "span", "id": "使用灵活", "html": "<span>使用灵活</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }, { "tag": "span", "id": "Flexible-usage.", "html": "<span>Flexible usage.</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }));
-    Markplus.register(176, lang({ "tag": "span", "html": "预编译、运行时渲染<br>", "class": "Plain" }, { "tag": "span", "html": "Precompiled\\ Runtime-render.<br>", "class": "Plain" }));
-    Markplus.register(179, { "tag": "span", "html": "<br>", "class": "Plain" });
-    Markplus.register(180, { "tag": "span", "html": "<br>", "class": "Divider" });
-    Markplus.register(181, lang({ "tag": "span", "id": "但是，一切的前提是：保持简单", "html": "<span>但是，一切的前提是：保持简单</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2 }, { "tag": "span", "id": "But,-All-the-premises:-Keep-Simple.", "html": "<span>But, All the premises: Keep Simple.</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2 }));
-    Markplus.register(184, { "tag": "span", "html": "<br>", "class": "Plain" });
-    Markplus.register(185, { "tag": "span", "html": "<br>", "class": "Divider" });
-    Markplus.register(186, hitokoto({ "tag": "span", "html": "<span>爱冷剑，怜悲箫，月下狼孤啸；轻点画，慢勾描，云中人逍遥。</span><br>", "class": "Block" }, { "tag": "span", "html": "<span>https://github.com/zhengxiaoyao0716</span><br>", "class": "Block" }));
+    Markplus.register(135, lang({ "tag": "span", "id": "插件", "html": "<span>插件</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2 }, { "tag": "span", "id": "Plugin", "html": "<span>Plugin</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2 }));
+    Markplus.register(138, { "tag": "span", "id": "Via-`.markplusrc`:", "html": "<span>Via `.markplusrc`:</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 });
+    Markplus.register(139, { "tag": "pre", "html": "{ \"plugin\": [\"PLUGIN_NAME\"] }", "class": "Code Code-json" });
+    Markplus.register(142, { "tag": "span", "html": "Then Markplus will auto load `.markplusrc`.<br>", "class": "Plain" });
+    Markplus.register(143, { "tag": "span", "html": "<br>", "class": "Plain" });
+    Markplus.register(144, { "tag": "span", "id": "Via-`*rc`-,-`*.json`:", "html": "<span>Via `*rc` , `*.json`:</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 });
+    Markplus.register(145, { "tag": "span", "html": "Similar to `.markplusrc`, but you should use `markplus -c <config.json> ...` to load it.<br>", "class": "Plain" });
+    Markplus.register(146, { "tag": "span", "html": "<br>", "class": "Plain" });
+    Markplus.register(147, { "tag": "span", "id": "Via-JavaScript-module:", "html": "<span>Via JavaScript module:</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 });
+    Markplus.register(148, { "tag": "pre", "html": "exports.default = { plugin: [require('./MARKPLUS_PLUGIN_MODULE').default] };", "class": "Code Code-nodejs" });
+    Markplus.register(151, { "tag": "span", "html": "Then use `markplus -c <module.js> ...` to load it.<br>", "class": "Plain" });
+    Markplus.register(152, { "tag": "span", "html": "<br>", "class": "Plain" });
+    Markplus.register(153, { "tag": "span", "id": "Config-with-arguments:", "html": "<span>Config with arguments:</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 });
+    Markplus.register(154, { "tag": "pre", "html": "const config = {\n    plugin: [\n        [\"PLUGIN_NAME\" || require('PLUGIN_MODULE'), ...PLUGIN_ARGS]\n    ]\n};", "class": "Code Code-javascript" });
+    Markplus.register(161, { "tag": "span", "html": "<br>", "class": "Plain" });
+    Markplus.register(162, { "tag": "span", "html": "<br>", "class": "Plain" });
+    Markplus.register(163, { "tag": "span", "html": "<br>", "class": "Divider" });
+    Markplus.register(164, lang({ "tag": "span", "id": "基础目标", "html": "<span>基础目标</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2 }, { "tag": "span", "id": "Base-goal", "html": "<span>Base goal</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2 }));
+    Markplus.register(167, lang({ "tag": "span", "id": "更完善的工具链", "html": "<span>更完善的工具链</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }, { "tag": "span", "id": "More-perfect-tool-chain.", "html": "<span>More perfect tool chain.</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }));
+    Markplus.register(170, lang({ "tag": "span", "html": "易用，易扩展<br>", "class": "Plain" }, { "tag": "span", "html": "Easy to embedded, Convenient extension.<br>", "class": "Plain" }));
+    Markplus.register(173, { "tag": "span", "html": "<br>", "class": "Plain" });
+    Markplus.register(174, lang({ "tag": "span", "id": "加强表格", "html": "<span>加强表格</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }, { "tag": "span", "id": "Strengthing-for-`Table`-.", "html": "<span>Strengthing for `Table` .</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }));
+    Markplus.register(177, lang({ "tag": "span", "html": "混合单元格，宏计算<br>", "class": "Plain" }, { "tag": "span", "html": "Multi-unit-grid, Macro calculate.<br>", "class": "Plain" }));
+    Markplus.register(180, { "tag": "span", "html": "<br>", "class": "Plain" });
+    Markplus.register(181, lang({ "tag": "span", "id": "更清晰的语义", "html": "<span>更清晰的语义</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }, { "tag": "span", "id": "Clearer-semantics.", "html": "<span>Clearer semantics.</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }));
+    Markplus.register(184, lang({ "tag": "span", "html": "何时换行，何时滚动<br>", "class": "Plain" }, { "tag": "span", "html": "When to break line, When to scroll.<br>", "class": "Plain" }));
+    Markplus.register(187, { "tag": "span", "html": "<br>", "class": "Plain" });
+    Markplus.register(188, lang({ "tag": "span", "id": "动态交互", "html": "<span>动态交互</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }, { "tag": "span", "id": "Dynamic-interactivity.", "html": "<span>Dynamic interactivity.</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }));
+    Markplus.register(191, lang({ "tag": "span", "html": "可选、可配置并且安全的动态演出<br>", "class": "Plain" }, { "tag": "span", "html": "Optional\\ configurable and safety dynamic perform.<br>", "class": "Plain" }));
+    Markplus.register(194, { "tag": "span", "html": "<br>", "class": "Plain" });
+    Markplus.register(195, lang({ "tag": "span", "id": "合理的结构", "html": "<span>合理的结构</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }, { "tag": "span", "id": "Reasonable-structure.", "html": "<span>Reasonable structure.</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }));
+    Markplus.register(198, lang({ "tag": "span", "html": "可复用，可继承<br>", "class": "Plain" }, { "tag": "span", "html": "Reusable, Inheritable.<br>", "class": "Plain" }));
+    Markplus.register(201, { "tag": "span", "html": "<br>", "class": "Plain" });
+    Markplus.register(202, lang({ "tag": "span", "id": "使用灵活", "html": "<span>使用灵活</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }, { "tag": "span", "id": "Flexible-usage.", "html": "<span>Flexible usage.</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3 }));
+    Markplus.register(205, lang({ "tag": "span", "html": "预编译、运行时渲染<br>", "class": "Plain" }, { "tag": "span", "html": "Precompiled\\ Runtime-render.<br>", "class": "Plain" }));
+    Markplus.register(208, { "tag": "span", "html": "<br>", "class": "Plain" });
+    Markplus.register(209, { "tag": "span", "html": "<br>", "class": "Divider" });
+    Markplus.register(210, lang({ "tag": "span", "id": "但是，一切的前提是：保持简单", "html": "<span>但是，一切的前提是：保持简单</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2 }, { "tag": "span", "id": "But,-All-the-premises:-Keep-Simple.", "html": "<span>But, All the premises: Keep Simple.</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2 }));
+    Markplus.register(213, { "tag": "span", "html": "<br>", "class": "Plain" });
+    Markplus.register(214, { "tag": "span", "html": "<br>", "class": "Divider" });
+    Markplus.register(215, { "tag": "span", "html": "<br>", "class": "Divider" });
+    Markplus.register(216, hitokoto({ "tag": "span", "html": "<span>我的个性签名：爱冷剑，怜悲箫，月下狼孤啸；轻点画，慢勾描，云中人逍遥。</span><br>", "class": "Block" }, { "tag": "span", "html": "<span>我的GitHub：https://github.com/zhengxiaoyao0716</span><br>", "class": "Block" }));
+    Markplus.register(219, { "tag": "span", "html": "<br>", "class": "Plain" });
+    Markplus.register(220, { "tag": "span", "html": "<br>", "class": "Divider" });
     var remoteHitokoto = exports.remoteHitokoto = function remoteHitokoto(url) {
         var result = void 0;
         result = function () {
@@ -334,9 +352,9 @@
             return '<span class="Block">' + content + '</span>';
         });
     };
-    Markplus.register(194, lang({ "tag": "span", "id": "每日一言", "html": "<span>每日一言</span><br>", "class": "Header Header-4", "data-markplus-header-level": 4 }, { "tag": "span", "id": "Daily-words", "html": "<span>Daily words</span><br>", "class": "Header Header-4", "data-markplus-header-level": 4 }, { "tag": "span", "id": "ひとこと", "html": "<span>ひとこと</span><br>", "class": "Header Header-4", "data-markplus-header-level": 4 }));
-    Markplus.register(198, remoteHitokoto('https://sslapi.hitokoto.cn/'));
-    Markplus.register(199, { "tag": "span", "html": "<br>", "class": "Plain" });
+    Markplus.register(226, lang({ "tag": "span", "id": "每日一言", "html": "<span>每日一言</span><br>", "class": "Header Header-4", "data-markplus-header-level": 4 }, { "tag": "span", "id": "Daily-words", "html": "<span>Daily words</span><br>", "class": "Header Header-4", "data-markplus-header-level": 4 }, { "tag": "span", "id": "ひとこと", "html": "<span>ひとこと</span><br>", "class": "Header Header-4", "data-markplus-header-level": 4 }));
+    Markplus.register(230, remoteHitokoto('https://sslapi.hitokoto.cn/'));
+    Markplus.register(231, { "tag": "span", "html": "<br>", "class": "Plain" });
 });
 </script>
 <div id="markplus"></div><script>Markplus.default(document.querySelector('#markplus'));</script>
