@@ -46,6 +46,7 @@
 }
 .Markplus .Code {
     overflow-x: auto;
+    margin: 0;
     margin-bottom: 16px;
     padding: 16px;
     background: #eee;
