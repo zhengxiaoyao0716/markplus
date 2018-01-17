@@ -13,10 +13,12 @@
 }
 .Markplus .Header>.hash {
     position: relative;
+    padding: 0 12px;
+    margin-left: -24px;
 }
 .Markplus .Header:hover>.hash::before {
     position: absolute;
-    right: 6px;
+    left: 0;
     color: #888;
     content: "\00B6";
     cursor: pointer;

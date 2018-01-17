@@ -5,8 +5,7 @@ const head = fs.readFileSync(path.join(__dirname, './../../src/plugin/style-defa
 const StyleDefault = () => ({
     head: () => `<style>\n${head}\n</style>`,
     code: () => [
-        'Markplus.decorators.push((ele, _, payload) => ele.classList.contains(\'Header\') && ele.addEventListener(\'click\', () => location.hash = payload.id));',
-        'Markplus.decorators.push(ele => ele.classList.contains(\'Header\') && (ele.innerHTML = `<span class="hash"></span>${ele.innerHTML}`));',
+        'Markplus.decorators.push((ele, _, payload) => ele.classList.contains(\'Header\') && (ele.innerHTML = `<span class="hash"></span>${ele.innerHTML}`, ele.querySelector(\'.hash\').addEventListener(\'click\', () => location.hash = payload.id)));',
     ].join('\n'),
 });
 

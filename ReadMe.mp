@@ -178,7 +178,7 @@ $_ /:179
 
 
 $lang/60
-$Array/30
+$Array/29
 ## 基础目标
 ### 更完善的工具链
 易用，易扩展
@@ -208,7 +208,7 @@ $_ /99 // since the parent `$lang/60` only accept 60 lines, this would not close
 
 
 
-$Array/30
+$Array/29
 ## Base goal
 ### More perfect tool chain.
 Easy to embedded, Convenient extension.
