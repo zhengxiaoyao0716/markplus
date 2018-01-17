@@ -6,11 +6,10 @@ import PluginRenderPromise from './plugin/render-promise';
 import PluginStyleDefault from './plugin/style-default';
 
 const Render = fs.readFileSync(path.join(__dirname, './../src/Render.js'), 'utf-8');
-const camel = str => `${str.split('-').reduce((str, part) => `${str}${part[0].toUpperCase()}${part.slice(1)}`, '')}`;
 const CorePlugin = (self: Markplus, pkg: { version: string }) => {
     if (!self.name) {
         const firstH1: Types.Header = self.elements.find(ele => ele instanceof Types.Header && ele.level == 1);
-        self.name = firstH1 ? camel(firstH1.id) : `_${new Date().getTime()}`;
+        self.name = firstH1 ? firstH1.id : `_${new Date().getTime()}`;
     }
     return {
         head: () => `<!-- Markplus: ${self.name} -->`,

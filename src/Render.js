@@ -13,6 +13,15 @@ const Markplus = {
             },
         ],
         [
+            payload => payload instanceof Array,
+            payload => {
+                const ele = document.createElement('span');
+                payload.filter(p => p != null).forEach(payload => Markplus.register(payload.at, payload));
+                ele.classList.add('Array');
+                return ele;
+            },
+        ],
+        [
             payload => payload instanceof Object && payload.tag,
             payload => {
                 const { tag, html, ...props } = payload;
@@ -27,6 +36,8 @@ const Markplus = {
     ],
     decorators: [
         (ele, at) => ele.setAttribute('data-markplus-at', at),
+        ele => ele.innerHTML = ele.innerHTML.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>'),
+        ele => ele.innerHTML = ele.innerHTML.replace(/`(.*?)`/g, '<code>$1</code>'),
         (ele, at) => ele.id || (ele.id = `L${at}`),
     ],
     register(at, payload) {

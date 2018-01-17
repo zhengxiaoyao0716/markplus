@@ -120,15 +120,16 @@ The codes above is equivalent to those:
 
 # Markplus
 $lang/2
-## `Markdown` 的加强 (<a href='?lang=en'>English?</a>)
-## The strengthening of the `Markdown`. (<a href='?lang=zh'>中文版？</a>)
+## `Markdown` 的加强 [English?](?lang=en)
+## The strengthening of the `Markdown`. [中文版？](?lang=zh)
 
 ---
 $lang/2
 ## 用法
 ## Usage
 ``` bash
-markplus -h
+npm i --save-dev markplus
+./node_modules/.bin/markplus -h
 ```
 
 ---
@@ -139,17 +140,25 @@ $lang/2
 ``` json
 { "plugin": ["PLUGIN_NAME"] }
 ```
+$lang/2
+`Markplus` 会自动加载 `.markplusrc`。
 Then Markplus will auto load `.markplusrc`.
 
 ### Via `*rc` , `*.json`:
-Similar to `.markplusrc`, but you should use `markplus -c <config.json> ...` to load it.
+$lang/2
+与 `.markplusrc` 类似，但你需要用 `markplus -c <config.json> ...` 来加载它。
+Similar to `.markplusrc`, but you need use `markplus -c <config.json> ...` to load it.
 
-### Via JavaScript module:
+### Via `JavaScript`:
 ``` nodejs
 exports.default = { plugin: [require('./MARKPLUS_PLUGIN_MODULE').default] };
 ```
-Then use `markplus -c <module.js> ...` to load it.
+$lang/2
+然后通过 `markplus -c <config.js> ...` 来加载它.
+Then use `markplus -c <config.js> ...` to load it.
 
+$lang/2
+### 带参数的配置:
 ### Config with arguments:
 ``` javascript
 const config = {
@@ -160,62 +169,85 @@ const config = {
 ```
 
 
----
-$lang/2
+$_ /:179
+
+
+
+
+
+
+
+$lang/60
+$Array/30
 ## 基础目标
-## Base goal
-$lang/2
 ### 更完善的工具链
-### More perfect tool chain.
-$lang/2
 易用，易扩展
+
+### 加强表格
+混合单元格，宏计算
+
+### 更清晰的语义
+何时换行，何时滚动
+
+### 动态交互
+可选、可配置并且安全的动态演出
+
+### 合理的结构
+可复用，可继承
+
+### 使用灵活
+预编译、运行时渲染
+
+### 但是，一切的前提是：保持简单
+
+$_ /99 // since the parent `$lang/60` only accept 60 lines, this would not closed. but it useful in this case that we only want to hide the redundant lines.
+
+
+
+
+
+
+
+$Array/30
+## Base goal
+### More perfect tool chain.
 Easy to embedded, Convenient extension.
 
-$lang/2
-### 加强表格
 ### Strengthing for `Table` .
-$lang/2
-混合单元格，宏计算
 Multi-unit-grid, Macro calculate.
 
-$lang/2
-### 更清晰的语义
 ### Clearer semantics.
-$lang/2
-何时换行，何时滚动
 When to break line, When to scroll.
 
-$lang/2
-### 动态交互
 ### Dynamic interactivity.
-$lang/2
-可选、可配置并且安全的动态演出
 Optional\ configurable and safety dynamic perform.
 
-$lang/2
-### 合理的结构
 ### Reasonable structure.
-$lang/2
-可复用，可继承
 Reusable, Inheritable.
 
-$lang/2
-### 使用灵活
 ### Flexible usage.
-$lang/2
-预编译、运行时渲染
 Precompiled\ Runtime-render.
 
----
-$lang/2
-## 但是，一切的前提是：保持简单
-## But, All the premises: Keep Simple.
+### But, All the premises: Keep Simple.
 
+$_ /99
+
+
+
+
+
+
+
+$Array.prototype.fill(new Array(3))/1
 ---
----
-$hitokoto/2
-> 我的个性签名：爱冷剑，怜悲箫，月下狼孤啸；轻点画，慢勾描，云中人逍遥。
-> 我的GitHub：https://github.com/zhengxiaoyao0716
+
+$hitokoto/6 // since empty line could mark the end of `Block`, it would be used as an argument of `hitokoto/2`. so we should use `>` to mark the end.
+> 我的个性签名：
+>> 爱冷剑，怜悲箫，月下狼孤啸；轻点画，慢勾描，云中人逍遥。
+>
+> 我的GitHub：
+>> https://github.com/zhengxiaoyao0716
+>
 
 ***
 #remoteHitokoto(url) /4.then(content => `<span class="Block">${content}</span>`)

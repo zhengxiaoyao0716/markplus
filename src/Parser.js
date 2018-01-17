@@ -60,24 +60,40 @@ export class Load extends Element {
             this.lines.push(line);
             return;
         }
-        const ele = Parser.HTMLElement.pipe(line, at);
-        if (!ele) {
+        if (this.lastLine instanceof Element && !this.lastLine.completed(line, at)) {
+            this.lastLine.push(line, at);
+            this.size--;
+            return;
+        }
+        const ele = Parser.Function.pipe(line, at) || Parser.HTMLElement.pipe(line, at);
+        if (!ele || ele instanceof Save) {
             this.lines.push(line.slice(4));
             return;
         }
         this.lines.push(ele);
     }
-    dump() {
+    get expr() {
         const { name, args, exec, extra = '' } = this.params;
         const lines = this.size == 1 ? ''
             : this.lines.slice(1).map(
                 exec ?
                     line => line instanceof Element ?
-                        `${JSON.stringify(line.json)}` : `(\n        ${line}\n    )`
-                    : line => `${JSON.stringify(line)}`
+                        line.expr || JSON.stringify({ ...line.json, at: line.at }) : `(\n        ${line}\n    )`
+                    : JSON.stringify
             ).join(',\n    ');
-        const expr = `${args ? `${name}.bind${args}` : name}(\n    ${lines}${extra}\n)`;
-        return `Markplus.register(${this.at}, ${expr});`;
+        return `${args ? `${name}.bind${args}` : name}(\n    ${lines}${extra}\n)`;
+    }
+    dump() {
+        return `Markplus.register(${this.at}, ${this.expr});`;
+    }
+    // completed(line: string, at: number) { // eslint-disable-line no-unused-vars
+    //     if (this.lastLine instanceof Element && !this.lastLine.completed(line, at)) {
+    //         return false;
+    //     }
+    //     return super.completed(line, at);
+    // }
+    get lastLine() {
+        return this.lines[this.lines.length - 1];
     }
 }
 export class Comments extends Element {
@@ -97,19 +113,30 @@ export class Plain extends Element {
     }
 }
 export class Header extends Element {
+    static camel = str => {
+        const match = str.match(/\w+/g);
+        if (!match) {
+            return `_${str.replace(/[-\s+=)(*&^%$#@!~`}{\]["':;?/><.,\\|]+/g, '')}`;
+        }
+        const camel = `${match.reduce((str, part) => `${str}${part[0].toUpperCase()}${part.slice(1)}`, '')}`;
+        if (/^\d/.test(camel)) {
+            return `_${camel}`;
+        }
+        return `${camel[0].toLowerCase()}${camel.slice(1)}`;
+    };
     constructor(line: string, at: number, level: number, content: string) {
         super(1, line, at, { level, content });
         this.level = level;
         this.content = content;
-        this.id = this.content.trim().split(/[\s-]+/).join('-');
+        this.id = Header.camel(content);
     }
     get json() {
         return {
             tag: 'span',
-            id: this.id,
             html: `<span>${this.content}</span><br>`,
             class: `Header Header-${this.level}`,
             'data-markplus-header-level': this.level,
+            id: this.id,
         };
     }
 }
@@ -138,12 +165,14 @@ export class Divider extends Element {
     static symbol = ['---', '***'];
     constructor(line: string, at: number) {
         super(1, line, at, {});
+        this.style = ['solid', 'dashed'][Divider.symbol.indexOf(line)];
     }
     get json() {
-        return { tag: 'span', html: '<br>', class: 'Divider' };
+        return { tag: 'span', html: '<br>', class: `Divider Divider-${this.style}` };
     }
 }
 export class Block extends Element {
+    static symbol = '>';
     static regex = /^(>+)\s/;
     constructor(line: string, at: number, indent: number) {
         super(-1, line, at, {});
@@ -170,17 +199,39 @@ export class Block extends Element {
             return { indent, content };
         }));
         const map = (folded: []) => folded.map(line =>
-            line instanceof Array ? `<span class="Block">${map(line)}</span>` : `${line}<br>`
+            line instanceof Array ? `<span class="Block Block-nested">${map(line)}</span>` : `${line}<br>`
         ).join('');
         return { tag: 'span', html: map(folded), class: 'Block' };
     }
     push(line: string, at: number) { // eslint-disable-line no-unused-vars
+        if (line == Block.symbol.repeat(this.indents[0])) {
+            this.size = this.lines.length;
+            return;
+        }
         this.lines.push(line);
         const mathced = line.match(Block.regex);
         this.indents.push(mathced ? mathced[1].length : this.indents[this.indents.length - 1]);
     }
     completed(line: string, at: number) {
         if (line == '') {
+            this.size = this.lines.length;
+        }
+        return super.completed(line, at);
+    }
+}
+export class More extends Element {
+    static symbol = '^';
+    constructor(line: string, at: number, symbol?: string, brief?: string) {
+        super(-1, line, at, { brief });
+        this.symbol = symbol || line;
+        // this.brief = brief || '';
+    }
+    get json() {
+        const html = this.lines.length > 1 ? '' : `<span>${this.brief}</span>`;
+        return { tag: 'span', html, class: 'More' };
+    }
+    completed(line: string, at: number) { // eslint-disable-line no-unused-vars
+        if (!line.startsWith('    ')) {
             this.size = this.lines.length;
         }
         return super.completed(line, at);
@@ -305,9 +356,10 @@ const Parser = {
             const [, type, content] = matched;
             const length = type.length || 1;
             const pipe = ({
-                ...(o => (o['#'.repeat(length)] = () => new Header(line, at, type.length, content), o))({}),
+                ...(o => (o['#'.repeat(length)] = () => new Header(line, at, length, content), o))({}),
                 ...Code.symbol.reduce((o, s) => (o[s] = () => new Code(line, at, s, content), o), {}),
-                ...(o => (o['>'.repeat(length)] = () => new Block(line, at, length), o))({}),
+                ...Array.from(More.symbol).reduce((o, s) => (o[s] = () => new More(line, at, s, content), o), {}),
+                ...(o => (o[Block.symbol.repeat(length)] = () => new Block(line, at, length), o))({}),
                 '': () => line.startsWith('    ') ? false : new Plain(line, at), // 4 white-space means code.
             })[type];
             if (!pipe) {

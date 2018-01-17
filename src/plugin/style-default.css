@@ -1,6 +1,6 @@
 .Markplus {
     font-family: arial,tahoma,'Microsoft Yahei','\5b8b\4f53',sans-serif;
-    margin: 20px;
+    margin: 45px;
     line-height: 1.5;
 }
 .Markplus .Target {
@@ -11,22 +11,26 @@
     font-weight: bold;
     padding-bottom: 6px;
 }
-.Markplus .Header:hover::before {
+.Markplus .Header>.hash {
+    position: relative;
+}
+.Markplus .Header:hover>.hash::before {
+    position: absolute;
+    right: 6px;
     color: #888;
     content: "\00B6";
-    margin-left: -6px;
-    margin-right: 3px;
     cursor: pointer;
 }
 .Markplus .Header.Header-1 {
-    border-bottom: 2px solid #eee;
-    font-size: 1.5em;
+    border-bottom: 0.1em solid #eee;
+    font-size: 2em;
 }
 .Markplus .Header.Header-2 {
-    font-size: 1.3em;
+    border-bottom: 0.05em solid #eee;
+    font-size: 1.5em;
 }
 .Markplus .Header.Header-3 {
-    font-size: 1.2em;
+    font-size: 1.25em;
 }
 .Markplus .Header.Header-4 {
     font-size: 1.1em;
@@ -36,13 +40,19 @@
 }
 
 .Markplus .Divider {
-    border-top: 1px solid #eee;
+    border-top: 0.25em solid #eee;
+}
+.Markplus .Divider.Divider-dashed {
+    border-top-style: dashed;
 }
 .Markplus .Block, .Markplus .Block>Block {
     display: block;
     position: relative;
-    border-left: 3px solid #eee;
-    padding-left: 12px;
+    border-left: 0.25em solid #eee;
+    padding: 0 1em;
+}
+.Markplus .Block:not(.Block-nested) {
+    margin-bottom: 6px;
 }
 .Markplus .Code {
     overflow-x: auto;
@@ -50,4 +60,20 @@
     margin-bottom: 16px;
     padding: 16px;
     background: #eee;
+}
+
+.Markplus a {
+    color: #0366d6;
+    text-decoration: none;
+}
+.Markplus a:hover {
+    text-decoration: underline;
+}
+.Markplus code {
+    padding: 0.2em 0.4em;
+    margin: 0;
+    font-size: 85%;
+    background-color: rgba(27,31,35,0.05);
+    border-radius: 3px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
 }
