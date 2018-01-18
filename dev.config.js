@@ -1,1 +1,1 @@
-exports.default = { plugin: [require('./plugin/markplus-plugin-render-catalog').default, require('./plugin/markplus-plugin-render-highlight').default] };
+exports.default = { plugin: [require('./../markplus-plugin-render-catalog').default, require('./../markplus-plugin-render-highlight').default] };

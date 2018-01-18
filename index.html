@@ -86,11 +86,7 @@
 <style>
     .Markplus-catalog {
         position: relative;
-        margin-right: 10px;
         transition: margin-right 0.5s;
-    }
-    .Markplus-catalog.fold {
-        margin-right: 50px;
     }
 
     .Markplus-catalog>a.fold {
@@ -129,18 +125,54 @@
         margin: 10px 30px 10px 12px;
         padding-left: 8px;
     }
+    .Markplus-catalog>.Tabel span {
+        word-break: break-all;
+    }
+    .Markplus-catalog>.Tabel span.tab-1 {
+        word-break: break-word;
+    }
     .Markplus-catalog>.Tabel span.tab:not(:hover) {
         color: #9ff;
     }
-    .Markplus-catalog>.Tabel span.tab:hover {
+    .Markplus-catalog>.Tabel span.tab:hover:not(.tab-1) {
         border-left: 3px solid #fff;
         padding-left: 5px;
     }
-    .Markplus-catalog>.Tabel span.tab-1 { text-decoration: underline; font-weight: bold; margin-top: 30px; margin-bottom: 20px; }
+    .Markplus-catalog>.Tabel span.tab-1 {
+        text-decoration: underline;
+        font-weight: bold;
+        margin-top: 30px;
+        margin-bottom: 20px;
+        text-align: center;
+        border: 1px solid;
+        padding: 3px;
+    }
+    .Markplus-catalog>.Tabel span.tab-2 { border-top: 1px solid; border-bottom: 1px dashed; margin-top: 20px; }
     .Markplus-catalog>.Tabel span.tab-2 { margin-left: 12px; }
-    .Markplus-catalog>.Tabel span.tab-3 { margin-left: 22px; }
-    .Markplus-catalog>.Tabel span.tab-4 { margin-left: 32px; }
-    .Markplus-catalog>.Tabel span.tab-5 { margin-left: 42px; }
+    .Markplus-catalog>.Tabel span.tab-3 { margin-left: 27px; }
+    .Markplus-catalog>.Tabel span.tab-4 { margin-left: 42px; }
+    .Markplus-catalog>.Tabel span.tab-5 { margin-left: 57px; }
+    
+    .Markplus-catalog>span.top {
+        position: fixed;
+        bottom: 0;
+        width: 30vw;
+        transition: top 0.5s, width 0.5s;
+        display: block;
+        text-align: center;
+        cursor: pointer;
+        background: linear-gradient(0, #6cf, rgba(0, 0, 0, 0));
+        color: #9ff;
+    }
+    .Markplus-catalog.fold>span.top {
+        width: 0vw;
+    }
+    .Markplus-catalog>span.top:hover {
+        color: #fff;
+    }
+    .Markplus-catalog.fold>span.top:hover {
+        color: #6cf;
+    }
 </style><style id="markplusCatalogDynamicStyle"></style>
 <style>
     .Markplus {
@@ -160,8 +192,12 @@
         overflow-x:auto;
         padding:16px;
     }
-    .Markplus .Code-full {
-        position: absolute;
+    .Markplus.full {
+        padding: 0;
+    }
+    .Markplus.full .Code {
+        height: 100%;
+        margin: 0;
     }
     .Markplus.hide {
         display: none;
@@ -314,7 +350,7 @@
     };
 
     Object.defineProperty(Markplus, 'version', { get: function get() {
-            return '0.2.12';
+            return '0.2.13';
         } });
 
     Markplus.renders.unshift([function (payload) {
@@ -333,6 +369,13 @@
         }));
     });
     (function (container) {
+        window.addEventListener('load', function () {
+            return function (parent) {
+                parent.style.display = 'flex';
+                parent.insertBefore(container, Markplus.container);
+            }(Markplus.container.parentElement);
+        });
+
         container.classList.add('Markplus-catalog');
         container.appendChild(function (span) {
             return span.innerHTML = '<!-- markplus-plugin-render-catalog -->', span;
@@ -352,24 +395,38 @@
         tabArea.classList.add('Tabel');
         container.appendChild(tabArea);
 
-        window.addEventListener('load', function () {
-            return function (parent) {
-                parent.style.display = 'flex';
-                parent.insertBefore(container, Markplus.container);
-            }(Markplus.container.parentElement);
-        });
+        var scrollTo = function scrollTo(target) {
+            var styleTop = function styleTop() {
+                return Math.min(target.offsetTop - target.offsetParent.offsetTop, container.clientHeight - tabArea.clientHeight);
+            };
+            target && target.offsetParent && [tabArea, foldButton].forEach(function (dom) {
+                return dom.style.top = styleTop() + 'px';
+            });
+        };
 
+        var backTop = document.createElement('span');
+        container.appendChild(function (button) {
+            button.innerText = '︽';
+            button.classList.add('top');
+            button.addEventListener('click', function () {
+                location.hash = location.hash ? '' : '#top';
+                scrollTo(Markplus.container);
+            });
+
+            return button;
+        }(backTop));
+
+        var hashAvailable = function hashAvailable() {
+            return location.hash && location.hash != '#top';
+        };
         var dynamicStyle = document.querySelector('#markplusCatalogDynamicStyle');
         ['load', 'hashchange'].forEach(function (event) {
             return window.addEventListener(event, function () {
                 var firstTab = container.querySelector('.Tabel span.tab');
-                var hash = decodeURIComponent(location.hash || firstTab && firstTab.getAttribute('to'));
+                var hash = decodeURIComponent(hashAvailable() ? location.hash : firstTab && firstTab.getAttribute('to'));
+                console.log(hash);
                 dynamicStyle.innerHTML = '.Markplus-catalog>.Tabel span.tab[to="' + hash + '"] { color: #fff; }';
-                var hashTag = Markplus.container.querySelector('.Header' + hash);
-                var styleTop = function styleTop() {
-                    return Math.min(hashTag.offsetTop - hashTag.offsetParent.offsetTop, container.clientHeight - tabArea.clientHeight);
-                };
-                hashTag && (tabArea.style.top = foldButton.style.top = styleTop() + 'px');
+                hashAvailable() && scrollTo(Markplus.container.querySelector('.Header' + hash) || Markplus.container.querySelector(hash) || document.querySelector(hash));
             });
         });
 
@@ -377,6 +434,10 @@
             if (!ele) {
                 return container;
             }
+            ele.addEventListener('click', function () {
+                return scrollTo(ele);
+            });
+
             var tab = document.createElement('span');
             tab.innerText = ele.innerText;
             tab.classList.add('tab');
@@ -397,11 +458,14 @@
     (function () {
         var container = document.createElement('div');
         container.classList.add('Markplus');
+        container.classList.add('full');
 
         var highlight = function highlight(ele) {
             return ele.querySelector('#full').addEventListener('click', function () {
                 var full = document.createElement('pre');
                 container.appendChild(full);
+
+                full.id = '_full_' + ele.id;
                 full.className = ele.className;
                 full.innerHTML = ele.innerHTML;
                 Array.from(full.querySelectorAll('.hljs')).forEach(function (hljs) {
@@ -411,15 +475,17 @@
                     Markplus.container.classList.remove('hide');
                     container.remove();
                     ele.innerHTML = full.innerHTML;
+                    container.innerHTML = '';
                     Array.from(ele.querySelectorAll('.hljs')).forEach(function (hljs) {
                         return hljs.removeAttribute('contenteditable');
                     });
                     highlight(ele);
-                    container.innerHTML = '';
+                    location.hash = ele.id;
                 });
 
                 Markplus.container.classList.add('hide');
                 Markplus.container.parentElement.insertBefore(container, Markplus.container);
+                location.hash = full.id;
             });
         };
         Markplus.decorators.push(function (ele, _, payload) {
