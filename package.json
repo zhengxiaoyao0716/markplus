@@ -1,6 +1,6 @@
 {
   "name": "markplus",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "description": "The strengthening of the `Markdown`.",
   "main": "index.js",
   "bin": {
@@ -37,6 +37,6 @@
     "eslint": "^4.12.0",
     "http-server": "^0.10.0",
     "markplus-plugin-render-catalog": "^0.2.10",
-    "markplus-plugin-render-highlight": "^0.2.8"
+    "markplus-plugin-render-highlight": "^0.2.11"
   }
 }
