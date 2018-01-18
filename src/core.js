@@ -13,7 +13,7 @@ const CorePlugin = (self: Markplus, pkg: { version: string }) => {
     }
     return {
         head: () => `<!-- Markplus: ${self.name} -->`,
-        code: () => `${Render}Markplus.__defineGetter__('version', () => '${pkg.version}');\n`,
+        code: () => `${Render}Object.defineProperty(Markplus, 'version', { get: () => '${pkg.version}' });\n`,
         dump: () => [
             `\nexport const name = '${self.name}';`,
             ...self.elements.map(ele => ele.dump()),

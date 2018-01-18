@@ -1,14 +1,14 @@
 {
   "name": "markplus",
-  "version": "0.2.11",
+  "version": "0.2.12",
   "description": "The strengthening of the `Markdown`.",
   "main": "index.js",
   "bin": {
     "markplus": "./bin/markplus.js"
   },
   "scripts": {
-    "build": "babel src --out-dir lib -s",
-    "start": "npm run build && node ./bin/markplus ReadMe.mp -o index.html && start index.html",
+    "build": "babel src --out-dir lib -s && node ./bin/markplus ReadMe.mp -o index.html -c dev.config.js",
+    "start": "npm run build && start index.html",
     "test": "npm run build && node lib/test.js"
   },
   "repository": {
@@ -35,8 +35,6 @@
     "babel-preset-flow": "^6.23.0",
     "babel-preset-stage-2": "^6.24.1",
     "eslint": "^4.12.0",
-    "http-server": "^0.10.0",
-    "markplus-plugin-render-catalog": "^0.2.10",
-    "markplus-plugin-render-highlight": "^0.2.11"
+    "http-server": "^0.10.0"
   }
 }
