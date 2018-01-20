@@ -346,8 +346,8 @@
             this.decorators.forEach(function (decorator) {
                 return decorator(ele, at, payload);
             });
-            Markplus.elements[at] = ele;
             this.replaceHtml(ele, ele.innerHTML);
+            Markplus.elements[at] = ele;
             this.container.appendChild(ele);
         }
     };
@@ -357,7 +357,7 @@
     };
 
     Object.defineProperty(Markplus, 'version', { get: function get() {
-            return '0.2.13';
+            return '0.2.14';
         } });
 
     Markplus.renders.unshift([function (payload) {
