@@ -36,13 +36,21 @@ const Markplus = {
     ],
     decorators: [
         (ele, at) => ele.setAttribute('data-markplus-at', at),
-        ele => ele.innerHTML = ele.innerHTML.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>'),
-        ele => ele.innerHTML = ele.innerHTML.replace(/`(.*?)`/g, '<code>$1</code>'),
         (ele, at) => ele.id || (ele.id = `L${at}`),
     ],
+    htmlSugars: [
+        [/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>'],
+        [/`(.*?)`/g, '<code>$1</code>'],
+    ],
+    replaceHtml(ele, html) {
+        const escape = html.replace(/\\(.)/g, (_, char) => `\\u00${char.charCodeAt(0).toString(16)}`);
+        const replaced = this.htmlSugars.reduce((html, [regExp, replace]) => html.replace(regExp, replace), escape);
+        ele.innerHTML = replaced.replace(/\\u([0-9A-Za-z]{4})/g, (_, code) => `${String.fromCodePoint(Number.parseInt(code, 16))}`);
+    },
     register(at, payload) {
         const ele = this.renders.find(([cond]) => cond(payload))[1](payload);
         this.decorators.forEach(decorator => decorator(ele, at, payload));
+        this.replaceHtml(ele, ele.innerHTML);
         Markplus.elements[at] = ele;
         this.container.appendChild(ele);
     },

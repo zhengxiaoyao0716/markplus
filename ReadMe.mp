@@ -19,8 +19,8 @@ $_ /4                                                                           
     (match) ['zh', 'en', 'jp'].indexOf(match && match[1])
     (index) (...lines) => lines[index == -1 ? 0 : index] || lines[0]            // the last return is a function, and this would be assigned to the `IDENT`.
 #version/Markplus.version                                                       // `#IDENT/value` means `#IDENT/0 value`, you can use this to define constant.
-$console.log(console, '    version:')/1, '\n}\n'                                // `$IDENT(this, ...thisArgs) ...args` equals to `$IDENT.bind(this, ...thisArgs)(...Args)`.
-    `'${version}',`                                                             // for `/N` followed `$IDENT(...args)` directly, 'v0.0.1' was used, instead of 'version'.
+$console.log(console, '    version:')/1, '}\n'                                  // `$IDENT(this, ...thisArgs) ...args` equals to `$IDENT.bind(this, ...thisArgs)(...Args)`.
+    `'${version}',\n`                                                           // for `/N` followed `$IDENT(...args)` directly, 'v0.0.1' was used, instead of 'version'.
 $_/'equals to `$_/0 ...`'                                                       // notice that the `...args` will be execute for `/N` followed `IDENT` directly without white-space.
 $_ /:120                                                                        // `/:n` = `/N` , N = n - 25
 The codes above is equivalent to those:
@@ -98,10 +98,10 @@ The codes above is equivalent to those:
     const version = _version();
     // L22
     _L23 = (
-        `'${version}',`                                                             // for `/N` followed `$IDENT(...args)` directly, 'v0.0.1' was used, instead of 'version'.
+        `'${version}',\n`                                                           // for `/N` followed `$IDENT(...args)` directly, 'v0.0.1' was used, instead of 'version'.
     );
     console.log.bind(console, '    version:')(
-        _L23, '\n}\n'                                // `$IDENT(this, ...thisArgs) ...args` equals to `$IDENT.bind(this, ...thisArgs)(...Args)`.
+        _L23, '}\n'                                  // `$IDENT(this, ...thisArgs) ...args` equals to `$IDENT.bind(this, ...thisArgs)(...Args)`.
     );
     // 24
     void(
