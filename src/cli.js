@@ -21,34 +21,36 @@ const opts = (name: string) => {
 };
 
 const babelrc = JSON.parse(fs.readFileSync(path.join(__dirname, './../.babelrc'), 'utf-8'));
+const transform = (code, name) => (
+    commander.transform ? babel.transform(code, { ...babelrc, plugins: ['transform-es2015-modules-umd'], filename: name }).code : code
+).replace(/\r?\n/g, '\n    ').replace(/ {4}\n/g, '\n').trim();
+
 const head = ({ head }) => head();
-const code = ({ code, name }) => commander.transform ? babel.transform(code(), { ...babelrc, plugins: ['transform-es2015-modules-umd'], filename: name }).code : code();
-const launch = ({ name }) => `<div id="markplus"></div><script>${name}.default(document.querySelector('#markplus'));</script>`;
+const code = ({ code }) => transform(code(), 'Markplus');
+const dump = ({ dump, name }) => transform(dump(), name);
 
 const compile = () => {
     const input = commander.args[0]; // eslint-disable-line no-console
-    if (!input) {
-        throw new Error('missing input file.');
-    }
     const name = commander.args[1];
-    Markplus.from(fs.readFileSync(input, 'utf-8'), name, opts(commander.config))
-        .then(mp => commander.only ? ({ head, code })[commander.only](mp) : [
+    Markplus.from(input ? fs.readFileSync(input, 'utf-8') : '# Hello Markplus', name, opts(commander.config))
+        .then(mp => commander.only ? ({ head, code, dump })[commander.only](mp) : [
             head(mp),
-            '<style>body { margin: 0; width: 100%; height: 100%; }</style>',
-            `<script>\n${code(mp)}\n</script>`,
-            launch(mp),
+            '<style>body { margin: 0; width: 100%; height: 100%; }</style>\n',
+            `<script>\n    ${code(mp)}\n</script>\n`,
+            `<script>\n    ${dump(mp)}\n</script>\n`,
+            '<div id="markplus"></div>\n',
+            `<script>new ${mp.name}.default().render(document.querySelector('#markplus'));</script>\n`,
             '',
         ].join('\n'))
-        .then(output =>
-            commander.out ?
-                fs.writeFileSync(commander.out, output, 'utf-8')
-                : console.log(output) // eslint-disable-line no-console
+        .then(output => commander.out ?
+            fs.writeFileSync(commander.out, output, 'utf-8')
+            : console.log(output) // eslint-disable-line no-console
         ).catch(console.error); // eslint-disable-line no-console
 };
 
 commander.version(pkg.version).usage('[options] INPUT <name> ...');
 [
-    ['--only <head|code>', 'Only output the specific part.'],
+    ['--only <head|code|dump>', 'Only output the specific part.'],
     ['-o, --out <file>', 'Write the output into the file.'],
     ['-c, --config <.markplusrc|json|config.js>', 'Read the config from the file.'],
     ['--no-transform', 'With out babel transform.'],

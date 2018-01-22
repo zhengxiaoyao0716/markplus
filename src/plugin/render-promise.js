@@ -1,3 +1,4 @@
+const polyfill = 'window.fetch || document.writeln(\'<script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"><\' + \'/script>\');';
 const code = `[
     payload => payload instanceof Promise,
     payload => {
@@ -8,6 +9,7 @@ const code = `[
     },
 ]`;
 const RenderPromise = () => ({
+    head: () => `<script>${polyfill}</script>`,
     code: () => `Markplus.renders.unshift(${code});`,
 });
 export default RenderPromise;

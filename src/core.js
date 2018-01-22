@@ -6,18 +6,28 @@ import PluginRenderPromise from './plugin/render-promise';
 import PluginStyleDefault from './plugin/style-default';
 
 const Render = fs.readFileSync(path.join(__dirname, './../src/Render.js'), 'utf-8');
+const polyfill = 'window.Promise || document.writeln(\'<script src="https://cdn.jsdelivr.net/npm/babel-polyfill@6.26.0/dist/polyfill.min.js"><\' + \'/script>\');';
 const CorePlugin = (self: Markplus, pkg: { version: string }) => {
     if (!self.name) {
         const firstH1: Types.Header = self.elements.find(ele => ele instanceof Types.Header && ele.level == 1);
-        self.name = firstH1 ? firstH1.id : `_${new Date().getTime()}`;
+        const name = firstH1 ? firstH1.id : `_${new Date().getTime()}`;
+        self.name = `${name[0].toUpperCase()}${name.slice(1)}`;
     }
     return {
-        head: () => `<!-- Markplus: ${self.name} -->`,
-        code: () => `${Render}Object.defineProperty(Markplus, 'version', { get: () => '${pkg.version}' });\n`,
-        dump: () => [
-            `\nexport const name = '${self.name}';`,
-            ...self.elements.map(ele => ele.dump()),
-        ].join('\n'),
+        head: () => `<!DOCTYPE html>\n<!-- Markplus: ${self.name} -->\n<meta charset="UTF-8">\n<title>${self.name}</title>\n<script>${polyfill}</script>`,
+        code: () => `${Render}export const version = '${pkg.version}';\n`,
+        dump: () => `
+            import * as Markplus from 'Markplus';
+            class ${self.name} {
+                constructor() {
+                    ${self.elements.map(ele => ele.dump()).join('\n')}
+                }
+                render(container) {
+                    Markplus.default(container);
+                }
+            }
+            export default ${self.name};
+        `,
     };
 };
 import pkg from './../package.json';
@@ -37,7 +47,7 @@ export type Options = {
 
 export default class Markplus {
     static from = (content: string | [string], name?: string, opts?: Options): Promise<Markplus> => new Promise((resolve, reject) => {
-        const lines = content instanceof Array ? content : content.split(content.endsWith('\r\n') ? '\r\n' : '\n');
+        const lines = content instanceof Array ? content : content.split(/\r?\n/);
         const elements = Parser.parse(lines);
         resolve(new Markplus(elements, name || '', opts || {}));
     });
@@ -65,13 +75,9 @@ export default class Markplus {
         })();
     }
 
-    head = () => this.plugin('head').join('\n');
-    code = () => ([
-        '\n/* code */\n',
-        ...this.plugin('code'),
-        '\n/* dump */\n',
-        ...this.plugin('dump'),
-    ].join('\n'));
+    head = () => this.plugin('head').join('\n\n');
+    code = () => this.plugin('code').join('\n\n');
+    dump = () => this.plugin('dump').join('\n\n');
 
     __dirname = __dirname;
 }

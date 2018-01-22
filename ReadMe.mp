@@ -118,7 +118,7 @@ The codes above is equivalent to those:
 
 
 
-# Markplus
+# Markplus (document)
 $lang/2
 ## `Markdown` 的加强 [English?](?lang=en)
 ## The strengthening of the `Markdown`. [中文版？](?lang=zh)

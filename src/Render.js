@@ -1,7 +1,6 @@
 const Markplus = {
     get version() { return ''; },
     container: (container => (container.classList.add('Markplus'), container))(document.createElement('div')),
-    elements: [],
     renders: [
         [
             payload => typeof payload == 'string',
@@ -34,10 +33,6 @@ const Markplus = {
         ],
         [() => true, () => document.createElement('span')],
     ],
-    decorators: [
-        (ele, at) => ele.setAttribute('data-markplus-at', at),
-        (ele, at) => ele.id || (ele.id = `L${at}`),
-    ],
     htmlSugars: [
         [/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>'],
         [/`(.*?)`/g, '<code>$1</code>'],
@@ -47,13 +42,16 @@ const Markplus = {
         const replaced = this.htmlSugars.reduce((html, [regExp, replace]) => html.replace(regExp, replace), escape);
         ele.innerHTML = replaced.replace(/\\u([0-9A-Za-z]{4})/g, (_, code) => `${String.fromCodePoint(Number.parseInt(code, 16))}`);
     },
+    decorators: [
+        (ele, at) => ele.setAttribute('data-markplus-at', at),
+        (ele, at) => ele.id || (ele.id = `L${at}`),
+    ],
     register(at, payload) {
         const ele = this.renders.find(([cond]) => cond(payload))[1](payload);
-        this.decorators.forEach(decorator => decorator(ele, at, payload));
         this.replaceHtml(ele, ele.innerHTML);
-        Markplus.elements[at] = ele;
+        this.decorators.forEach(decorator => decorator(ele, at, payload));
         this.container.appendChild(ele);
     },
 };
-
+export const register = Markplus.register.bind(Markplus);
 export default /** @param {HTMLElement} container */ container => container.appendChild(Markplus.container);

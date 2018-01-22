@@ -51,7 +51,7 @@ export class Save extends Element {
             ].join('\n    ')}\n`;
         const linesResult = this.size == 1 ? '' : 'result';
         const fn = `function ${args || '()'} {\n${lines}    return (\n        ${linesResult}${extra}\n    );\n}`;
-        return `${name.startsWith('_') ? '' : 'export '}const ${name} = ${exec ? `(${fn})()` : fn};`;
+        return `const ${name}${name.startsWith('_') ? '' : ` = this.${name}`} = ${exec ? `(${fn})()` : fn};`;
     }
 }
 export class Load extends Element {

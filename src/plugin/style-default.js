@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-const head = fs.readFileSync(path.join(__dirname, './../../src/plugin/style-default.css'), 'utf-8').replace(/\n/g, '\n    ');
+const head = fs.readFileSync(path.join(__dirname, './../../src/plugin/style-default.css'), 'utf-8').replace(/\r?\n/g, '\n    ').replace(/ {4}\n/g, '\n').trim();
 const StyleDefault = () => ({
     head: () => `<style>\n    ${head}\n</style>`,
     code: () => [
