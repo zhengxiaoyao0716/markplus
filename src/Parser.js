@@ -162,10 +162,10 @@ export class Code extends Element {
     }
 }
 export class Divider extends Element {
-    static symbol = ['---', '***'];
+    static symbol = ['---', '***', '==='];
     constructor(line: string, at: number) {
         super(1, line, at, {});
-        this.style = ['solid', 'dashed'][Divider.symbol.indexOf(line)];
+        this.style = ['solid', 'dashed', 'bold'][Divider.symbol.indexOf(line)];
     }
     get json() {
         return { tag: 'span', html: '<br>', class: `Divider Divider-${this.style}` };

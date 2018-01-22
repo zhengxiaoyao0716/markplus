@@ -42,10 +42,13 @@
 }
 
 .Markplus .Divider {
-    border-top: 0.25em solid #eee;
+    border-top: 1px solid #eee;
 }
 .Markplus .Divider.Divider-dashed {
     border-top-style: dashed;
+}
+.Markplus .Divider.Divider-bold {
+    border-top-width: 0.25em;
 }
 .Markplus .Block, .Markplus .Block>Block {
     display: block;

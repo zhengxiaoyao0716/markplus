@@ -123,7 +123,7 @@ $lang/2
 ## `Markdown` 的加强 [English?](?lang=en)
 ## The strengthening of the `Markdown`. [中文版？](?lang=zh)
 
----
+===
 $lang/2
 ## 用法
 ## Usage
@@ -132,7 +132,7 @@ npm i --save-dev markplus
 ./node_modules/.bin/markplus -h
 ```
 
----
+===
 $lang/2
 ## 插件
 ## Plugin
@@ -169,14 +169,14 @@ const config = {
 ```
 
 
-$_ /:179
+$_ /:178
 
 
 
 
 
 
-
+===
 $lang/60
 $Array/29
 ## 基础目标
