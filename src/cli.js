@@ -23,7 +23,7 @@ const opts = (name: string) => {
 const babelrc = JSON.parse(fs.readFileSync(path.join(__dirname, './../.babelrc'), 'utf-8'));
 const transform = (code, name) => (
     commander.transform ? babel.transform(code, { ...babelrc, plugins: ['transform-es2015-modules-umd'], filename: name }).code : code
-).replace(/\r?\n/g, '\n    ').replace(/ {4}\n/g, '\n').trim();
+);
 
 const head = ({ head }) => head();
 const code = ({ code }) => transform(code(), 'Markplus');
@@ -36,8 +36,8 @@ const compile = () => {
         .then(mp => commander.only ? ({ head, code, dump })[commander.only](mp) : [
             head(mp),
             '<style>body { margin: 0; width: 100%; height: 100%; }</style>\n',
-            `<script>\n    ${code(mp)}\n</script>\n`,
-            `<script>\n    ${dump(mp)}\n</script>\n`,
+            `<script>\n    ${code(mp).replace(/\r?\n/g, '\n    ').replace(/ {4}\n/g, '\n').trim()}\n</script>\n`,
+            `<script>\n    ${dump(mp).replace(/\r?\n/g, '\n    ').replace(/ {4}\n/g, '\n').trim()}\n</script>\n`,
             '<div id="markplus"></div>\n',
             `<script>new ${mp.name}.default().render(document.querySelector('#markplus'));</script>\n`,
             '',

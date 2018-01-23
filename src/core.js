@@ -5,6 +5,7 @@ import Parser, * as Types from './Parser';
 import PluginRenderPromise from './plugin/render-promise';
 import PluginStyleDefault from './plugin/style-default';
 
+const withEscape = fs.readFileSync(path.join(__dirname, './../src/Parser.js'), 'utf-8').split(/\r?\n/).slice(0, 4).join('\n');
 const Render = fs.readFileSync(path.join(__dirname, './../src/Render.js'), 'utf-8');
 const polyfill = 'window.Promise || document.writeln(\'<script src="https://cdn.jsdelivr.net/npm/babel-polyfill@6.26.0/dist/polyfill.min.js"><\' + \'/script>\');';
 const CorePlugin = (self: Markplus, pkg: { version: string }) => {
@@ -15,19 +16,19 @@ const CorePlugin = (self: Markplus, pkg: { version: string }) => {
     }
     return {
         head: () => `<!DOCTYPE html>\n<!-- Markplus: ${self.name} -->\n<meta charset="UTF-8">\n<title>${self.name}</title>\n<script>${polyfill}</script>`,
-        code: () => `${Render}export const version = '${pkg.version}';\n`,
+        code: () => `${withEscape}\n${Render}export const version = '${pkg.version}';\n`,
         dump: () => `
             import * as Markplus from 'Markplus';
             class ${self.name} {
                 constructor() {
-                    ${self.elements.map(ele => ele.dump()).join('\n')}
+                    ${self.elements.map(ele => ele.dump()).join('\n').replace(/\r?\n/g, '\n                    ')}
                 }
                 render(container) {
                     Markplus.default(container);
                 }
             }
             export default ${self.name};
-        `,
+        `.replace(/\r?\n {12}/g, '\n'),
     };
 };
 import pkg from './../package.json';

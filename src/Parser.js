@@ -1,3 +1,7 @@
+export const withEscape = action => text => action(
+    text.replace(/\\(.)/g, (_, char) => `\\u00${char.charCodeAt(0).toString(16)}`)
+).replace(/\\u([0-9A-Za-z]{4})/g, (_, code) => `${String.fromCodePoint(Number.parseInt(code, 16))}`);
+
 export class Element {
     constructor(size: number, line: string, at: number, params: any) {
         this.type = this.constructor.name;
@@ -78,7 +82,8 @@ export class Load extends Element {
             : this.lines.slice(1).map(
                 exec ?
                     line => line instanceof Element ?
-                        line.expr || JSON.stringify({ ...line.json, at: line.at }) : `(\n        ${line}\n    )`
+                        line.__proto__.hasOwnProperty('expr') ? line.expr.replace(/\r?\n/g, '\n    ') : JSON.stringify({ ...line.json, at: line.at })
+                        : `(\n        ${line}\n    )`
                     : JSON.stringify
             ).join(',\n    ');
         return `${args ? `${name}.bind${args}` : name}(\n    ${lines}${extra}\n)`;
@@ -237,6 +242,27 @@ export class More extends Element {
         return super.completed(line, at);
     }
 }
+export class Table extends Element {
+    constructor(line: string, at: number, content?: string) {
+        super(-1, line, at);
+    }
+    get json() {
+        return { tag: 'span', class: 'Table' };
+    }
+    push(line: string, at: number) { // eslint-disable-line no-unused-vars
+        if (line == '\\') {
+            this.size = this.lines.length;
+            return;
+        }
+        this.lines.push(line);
+    }
+    completed(line: string, at: number) {
+        if (line == '') {
+            this.size = this.lines.length;
+        }
+        return super.completed(line, at);
+    }
+}
 
 const Parser = {
     Function: {
@@ -342,6 +368,7 @@ const Parser = {
             mapper: {
                 ...Divider.symbol.reduce((o, s) => (o[s] = Divider, o), {}),
                 ...Code.symbol.reduce((o, s) => (o[s] = Code, o), {}),
+                '\\': Table,
             },
             pipe(line: string, at: number): Element {
                 return new (this.mapper[line] || Plain)(line, at);
@@ -360,6 +387,7 @@ const Parser = {
                 ...Code.symbol.reduce((o, s) => (o[s] = () => new Code(line, at, s, content), o), {}),
                 ...Array.from(More.symbol).reduce((o, s) => (o[s] = () => new More(line, at, s, content), o), {}),
                 ...(o => (o[Block.symbol.repeat(length)] = () => new Block(line, at, length), o))({}),
+                '\\': () => new Table(line, at, content),
                 '': () => line.startsWith('    ') ? false : new Plain(line, at), // 4 white-space means code.
             })[type];
             if (!pipe) {

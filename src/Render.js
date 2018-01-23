@@ -38,9 +38,7 @@ const Markplus = {
         [/`(.*?)`/g, '<code>$1</code>'],
     ],
     replaceHtml(ele, html) {
-        const escape = html.replace(/\\(.)/g, (_, char) => `\\u00${char.charCodeAt(0).toString(16)}`);
-        const replaced = this.htmlSugars.reduce((html, [regExp, replace]) => html.replace(regExp, replace), escape);
-        ele.innerHTML = replaced.replace(/\\u([0-9A-Za-z]{4})/g, (_, code) => `${String.fromCodePoint(Number.parseInt(code, 16))}`);
+        ele.innerHTML = withEscape((html) => this.htmlSugars.reduce((html, [regExp, replace]) => html.replace(regExp, replace), html))(html);
     },
     decorators: [
         (ele, at) => ele.setAttribute('data-markplus-at', at),
