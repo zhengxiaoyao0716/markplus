@@ -10,6 +10,8 @@
 .Markplus .Header {
     font-weight: bold;
     padding-bottom: 6px;
+    margin-top: 24px;
+    margin-bottom: 16px;
 }
 .Markplus .Header>.hash {
     position: relative;
@@ -24,7 +26,7 @@
     content: "\00B6";
 }
 .Markplus .Header.Header-1 {
-    border-bottom: 0.1em solid #eee;
+    border-bottom: 1px solid #eee;
     font-size: 2em;
 }
 .Markplus .Header.Header-2 {
@@ -64,7 +66,8 @@
     margin: 0;
     margin-bottom: 16px;
     padding: 16px;
-    background: #eee;
+    background: #f6f8fa;
+    border-radius: 3px;
 }
 
 .Markplus a {
@@ -81,4 +84,31 @@
     background-color: rgba(27,31,35,0.05);
     border-radius: 3px;
     font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+}
+
+.Markplus .Table table {
+    border-collapse: collapse;
+}
+.Markplus .Table table tr {
+    border-top: 1px solid #ccc;
+}
+.Markplus .Table table tr>th,
+.Markplus .Table table tr>td {
+    padding: 6px 13px;
+    border: 1px solid #ccc;
+}
+.Markplus .Table table tr:nth-child(2n) {
+    background-color: #f6f8fa;
+}
+.Markplus .Table table tr>th:nth-child(2n):not(:last-child),
+.Markplus .Table table tr>td:nth-child(2n):not(:last-child) {
+    border-left-style: dotted;
+}
+.Markplus .Table table tr>th:nth-child(2n+1):not(:last-child),
+.Markplus .Table table tr>td:nth-child(2n+1):not(:last-child) {
+    border-right-style: dotted;
+}
+.Markplus .Table table tfoot>tr>td {
+    font-size: 0.8em;
+    padding: 3px 6px;
 }

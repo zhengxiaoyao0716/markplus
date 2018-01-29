@@ -7,17 +7,18 @@ import pkg from './../package.json';
 import Markplus from './core';
 
 const opts = (name: string) => {
-    if (!name) {
-        name = '.markplusrc';
-        if (!fs.existsSync(name)) {
-            return {};
-        }
+    const file = path.join(process.cwd(), name || [
+        '.markplusrc',
+        'markplusrc.json',
+        'markplus.config.js',
+    ].find(name => fs.existsSync(path.join(process.cwd(), name))));
+    if (!file) {
+        return {};
     }
-    name = path.join(process.cwd(), name);
-    if (name.endsWith('rc') || name.endsWith('.json')) {
-        return JSON.parse(fs.readFileSync(name));
+    if (file.endsWith('rc') || file.endsWith('.json')) {
+        return JSON.parse(fs.readFileSync(file));
     }
-    return require(name).default;
+    return require(file).default;
 };
 
 const babelrc = JSON.parse(fs.readFileSync(path.join(__dirname, './../.babelrc'), 'utf-8'));

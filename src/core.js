@@ -2,10 +2,8 @@ import fs from 'fs';
 import path from 'path';
 
 import Parser, * as Types from './Parser';
-import PluginRenderPromise from './plugin/render-promise';
-import PluginStyleDefault from './plugin/style-default';
 
-const withEscape = fs.readFileSync(path.join(__dirname, './../src/Parser.js'), 'utf-8').split(/\r?\n/).slice(0, 4).join('\n');
+const withEscape = fs.readFileSync(path.join(__dirname, './../src/Parser.js'), 'utf-8').split(/\r?\n/).slice(0, 5).join('\n');
 const Render = fs.readFileSync(path.join(__dirname, './../src/Render.js'), 'utf-8');
 const polyfill = 'window.Promise || document.writeln(\'<script src="https://cdn.jsdelivr.net/npm/babel-polyfill@6.26.0/dist/polyfill.min.js"><\' + \'/script>\');';
 const CorePlugin = (self: Markplus, pkg: { version: string }) => {
@@ -31,11 +29,11 @@ const CorePlugin = (self: Markplus, pkg: { version: string }) => {
         `.replace(/\r?\n {12}/g, '\n'),
     };
 };
-import pkg from './../package.json';
 const corePlugins = [
-    [CorePlugin, pkg],
-    PluginRenderPromise,
-    PluginStyleDefault,
+    [CorePlugin, require('./../package.json')],
+    require('./plugin/render-promise').default,
+    require('./plugin/render-table').default,
+    require('./plugin/style-default').default,
 ];
 export type Plugin = (self: Markplus) => {
     head: () => string,

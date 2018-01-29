@@ -1,4 +1,4 @@
-import Parser from './Parser';
+const { default: Parser, withEscape, Table } = require('./../lib/Parser');
 
 console.log('check Parser.Function:');
 [
@@ -10,7 +10,7 @@ console.log('check Parser.Function:');
     ]
         .map(expr => expr.replace(/\.\.\./g, 'a, b, /* (comments) */...c'))
         .map(expr => `${expr} // (comments)`),
-    (exprs: [string]) => ([
+    /** @param {[string]} exprs */exprs => ([
         ...exprs.map(expr => expr.replace(' /N', ' /3')),
         ...exprs.map(expr => expr.replace(' /N', ' /:30')),
         ...exprs.map(expr => expr.replace(' /N', '/3')),
@@ -18,7 +18,7 @@ console.log('check Parser.Function:');
         ...exprs.map(expr => expr.replace(' /N', '')),
         exprs[2].replace(' /N', '/'),
     ]),
-    (exprs: [string]) => ([
+    /** @param {[string]} exprs */exprs => ([
         ...exprs.map(expr => expr.replace('IDENT', '$_ident.name')),
         ...exprs.map(expr => expr.replace('IDENT', '#_ident.name')),
     ]),
@@ -45,3 +45,6 @@ console.log('check Parser.HTMLElement:');
     throw new Error(line);
 });
 console.log();
+
+console.log(withEscape(text => (reg, rep) => text.replace(/&/g, ' AND ').replace(reg, rep))('a&b&c\\&d\\\\&e'));
+console.log(Table.split('- |a#b| c # d\\|e\\#f|#\\${\\\\}').map(t => `"${t}"`).join(', '));

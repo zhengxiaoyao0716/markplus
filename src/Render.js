@@ -1,5 +1,4 @@
 const Markplus = {
-    get version() { return ''; },
     container: (container => (container.classList.add('Markplus'), container))(document.createElement('div')),
     renders: [
         [
@@ -26,7 +25,7 @@ const Markplus = {
                 const { tag, html, ...props } = payload;
                 const ele = document.createElement(tag);
                 ele.innerHTML = html;
-                Object.keys(props).forEach(name => ele.setAttribute(name, props[name]));
+                Object.keys(props).forEach(name => typeof props[name] == 'string' && ele.setAttribute(name, props[name]));
                 ele.classList.add('Target');
                 return ele;
             },
@@ -34,11 +33,16 @@ const Markplus = {
         [() => true, () => document.createElement('span')],
     ],
     htmlSugars: [
-        [/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>'],
+        [/\[(.*?)\]\((.*?)\)/g, (...$) => `<a href="${(matched => matched ? `javascript:${matched[1]}(${matched[2]});` : $[2])($[2].match(/^\$(\w+)(.*)/))}">${$[1]}</a>`],
         [/`(.*?)`/g, '<code>$1</code>'],
     ],
     replaceHtml(ele, html) {
-        ele.innerHTML = withEscape((html) => this.htmlSugars.reduce((html, [regExp, replace]) => html.replace(regExp, replace), html))(html);
+        ele.innerHTML = withEscape( // eslint-disable-line no-undef
+            html =>
+                (reg, rep) => this.htmlSugars.reduce(
+                    (html, [regExp, replace]) => html.replace(regExp, replace), html
+                ).replace(reg, rep)
+        )(html);
     },
     decorators: [
         (ele, at) => ele.setAttribute('data-markplus-at', at),

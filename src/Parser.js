@@ -1,6 +1,26 @@
-export const withEscape = action => text => action(
-    text.replace(/\\(.)/g, (_, char) => `\\u00${char.charCodeAt(0).toString(16)}`)
-).replace(/\\u([0-9A-Za-z]{4})/g, (_, code) => `${String.fromCodePoint(Number.parseInt(code, 16))}`);
+export const withEscape = /** @param {(text: string) => (reg: RegExp|string, rep: function) => any} action @param {string} only */
+    (action, only) => /** @param {string} text */ text => action(
+        text.replace(/\\(.)/g, (_, char) => (only && only.indexOf(char) == -1) ? `\\${char}` : `\\u00${char.charCodeAt(0).toString(16)}`)
+    )(/\\u([0-9A-Za-z]{4})/g, (_, code) => `${String.fromCodePoint(Number.parseInt(code, 16))}`);
+
+
+const Namer = {
+    pascal: str => {
+        const match = str.match(/\w+/g);
+        if (!match) {
+            return `${str.replace(/[-\s+=)(*&^%$#@!~`}{\]["':;?/><.,\\|]+/g, '')}`;
+        }
+        const pascal = `${match.reduce((str, part) => `${str}${part[0].toUpperCase()}${part.slice(1)}`, '')}`;
+        if (/^\d/.test(pascal)) {
+            return `_${pascal}`;
+        }
+        return pascal;
+    },
+    camel(str) {
+        const pascal = this.pascal(str);
+        return `${pascal[0].toLowerCase()}${pascal.slice(1)}`;
+    },
+};
 
 export class Element {
     constructor(size: number, line: string, at: number, params: any) {
@@ -27,6 +47,7 @@ export class Invalid extends Element {
     dump() { return `console.error(${JSON.stringify(this)});`; }
 }
 export class Save extends Element {
+    static save = (name: string, content: string) => `const ${name}${name.startsWith('_') ? '' : ` = this.${name}`} = ${content};`;
     push(line: string, at: number) { // eslint-disable-line no-unused-vars
         const splited = Parser.Function.body.split(line.trim());
         if (!splited) {
@@ -55,7 +76,7 @@ export class Save extends Element {
             ].join('\n    ')}\n`;
         const linesResult = this.size == 1 ? '' : 'result';
         const fn = `function ${args || '()'} {\n${lines}    return (\n        ${linesResult}${extra}\n    );\n}`;
-        return `const ${name}${name.startsWith('_') ? '' : ` = this.${name}`} = ${exec ? `(${fn})()` : fn};`;
+        return Save.save(name, exec ? `(${fn})()` : fn);
     }
 }
 export class Load extends Element {
@@ -118,22 +139,11 @@ export class Plain extends Element {
     }
 }
 export class Header extends Element {
-    static camel = str => {
-        const match = str.match(/\w+/g);
-        if (!match) {
-            return `_${str.replace(/[-\s+=)(*&^%$#@!~`}{\]["':;?/><.,\\|]+/g, '')}`;
-        }
-        const camel = `${match.reduce((str, part) => `${str}${part[0].toUpperCase()}${part.slice(1)}`, '')}`;
-        if (/^\d/.test(camel)) {
-            return `_${camel}`;
-        }
-        return `${camel[0].toLowerCase()}${camel.slice(1)}`;
-    };
     constructor(line: string, at: number, level: number, content: string) {
         super(1, line, at, { level, content });
         this.level = level;
         this.content = content;
-        this.id = Header.camel(content);
+        this.id = Namer.camel(content);
     }
     get json() {
         return {
@@ -243,18 +253,140 @@ export class More extends Element {
     }
 }
 export class Table extends Element {
+    static split: (text: string) => [string] = withEscape(text => {
+        const reg = /\||#/g;
+        const split = /** @param {[[]]} seps */ seps => {
+            const result = reg.exec(text);
+            const last = seps.pop();
+            return result ?
+                split(
+                    last ?
+                        [...seps, text.slice(last.index, result.index), result]
+                        : [result])
+                : last ? [...seps, text.slice(last.index)] : null;
+        };
+        const seps = split([]);
+        return (reg, rep) => seps ? seps.map(text => text.replace(reg, rep)) : null;
+    }, '|#');
+    static regHead = /^([^(]*)(\(.*\))?$/;
+    static regGrid = /^(\||#)(\d*\\\d*\s)?(.*)$/;
+    static regSpan = /^(\d*)\\(\d*)\s$/;
+    static regMacro = /\$(\w+)/g;
     constructor(line: string, at: number, content?: string) {
         super(-1, line, at);
+        this.body = [];
+        if (!content) {
+            return;
+        }
+        const splited = Table.split(content);
+        if (splited == null) {
+            this.name = content.trim();
+            return;
+        }
+        this.pushHead(splited);
     }
-    get json() {
-        return { tag: 'span', class: 'Table' };
+    dump() {
+        const aligns = this.head.map(([, align]) => align);
+        this.align.forEach((align, index) => aligns[index] = align);
+        const rows: [[]] = new Array(this.body.length).fill().map(() => new Array(this.head.length).fill());
+        this.body.forEach((row, ri) => row.reduce((ci, text) => {
+            const offset = rows[ri].slice(ci).findIndex(grid => grid == null);
+            const index = offset == -1 ? rows[ri].length : ci + offset;
+            const align = aligns[index];
+            const [, type, span, content = ''] = text.match(Table.regGrid);
+            const macro = type == '#';
+            if (!span) {
+                rows[ri][index] = { align, macro, content };
+                return 1 + index;
+            }
+            const grid = macro ? { align, macro, content } : { refer: `:nth-child(${1 + ri})>:nth-child(${1 + index})` };
+            const [, rs, cs] = span.match(Table.regSpan);
+            rows.slice(ri, ri + (rs ? parseInt(rs) : 1)).forEach(row => new Array(cs ? parseInt(cs) : 1).fill().forEach((_, si) => row[index + si] = grid));
+            macro || (rows[ri][index] = { align, macro, content, rowspan: rs && ` rowspan="${rs}"`, colspan: cs && ` colspan="${cs}"` });
+            return 1 + index;
+        }, 0));
+
+        const names = (set => {
+            this.head.forEach(([text], index) => {
+                const name = Namer.pascal(text || Array.from(index.toString(26)).map(c => c.charCodeAt(0)).map(c => c < 65 ? c + 49 : c + 10).map(c => String.fromCharCode(c)).join('').toUpperCase());
+                set.add(set.has(name) ? `${name}_${index}` : name);
+            });
+            return Array.from(set);
+        })(new Set());
+        const macros = [];
+        const addMacro = (content: string, row: number, col: number) => {
+            const name = `${names[col]}_${row}`;
+            const replaced = withEscape(text => (reg, rep) => text.replace(Table.regMacro, `\${$1[${row}]}`).replace(reg, rep))(content);
+            const expr = `(${names.join(', ')}) => { const L = ${row}; return \`${replaced}\`; }`;
+            macros.push([name, expr]);
+            return name;
+        };
+
+        const name = this.name ? `<tr><td align="center" colspan="${this.head.length}">${this.name}</td></tr>` : '';
+        const head = `<tr>${this.head.map(([text, align], index) => `<th${align}>${text || `(${names[index]})`}</th>`).join('')}</tr>`;
+        const body = rows.map((row, ri) => `<tr>${row.map(grid => grid || {})
+            .map(({ refer, align, macro, content = '', rowspan, colspan }, ci) =>
+                refer ?
+                    `<td style="display: none;" data-markplus-table-ref="${refer}"></td>`
+                    : macro ?
+                        (name => `<th${align || ''} data-markplus-table-macro="${name}">#${name}</th>`)(addMacro(content.trim(), ri, ci))
+                        : `<td${align || ''}${rowspan || ''}${colspan || ''}>${content.trim()}</td>`
+            ).join('')}</tr>`).join('');
+        const html = `<table><thead>${head}</thead><tbody>${body}</tbody><tfoot>${name}</tfoot></table>`;
+
+        const id = Namer.camel(this.name || `_${this.at}`);
+        const json = { tag: 'span', html, class: 'Table', ...this.name && { id }, names };
+        const parser = this.head.map(([, , parser]) => parser).join(', ');
+        const macro = macros.map(([name, expr]) => `['${name}', ${expr}]`).join(', ');
+        return `${Save.save(id, '{}')}\nMarkplus.register(${this.at}, { ...${JSON.stringify({ ...json })}, parser: [${parser}], macro: [${macro}], table: ${id} });`;
+    }
+    pushHead = (splited: [string]) => {
+        this.head = splited.map(t => t.slice(1))
+            .map(t => [t, ({ '+': 'left', ':': 'center', '-': 'right' })[t[0]]])
+            .map(([text, align]) => [(align ? text.slice(1) : text).trim(), align ? ` align="${align}"` : ''])
+            .map(([text, align]) => {
+                const matched = text.match(Table.regHead);
+                if (!matched) {
+                    return [text, align];
+                }
+                const [, name, parser] = matched;
+                return [name, align, parser];
+            });
+    }
+    pushAlign = (splited: [string]) => {
+        const matched = splited.map(t => t.match(/\s*(:?)-+(:?)\s*/));
+        if (matched.some(m => m == null)) {
+            this.align = [];
+            this.pushBody(splited);
+            return;
+        }
+        this.align = matched.map(m => `${m[1]},${m[2]}`)
+            .map(se => ({ ':,': 'left', ':,:': 'center', ',:': 'right' })[se])
+            .map(align => align ? ` align="${align}"` : '');
+    }
+    pushBody = (splited: [string]) => {
+        const row = splited;
+        this.body.push(row);
     }
     push(line: string, at: number) { // eslint-disable-line no-unused-vars
+        this.lines.push(line);
         if (line == '\\') {
             this.size = this.lines.length;
             return;
         }
-        this.lines.push(line);
+        const splited = Table.split(line);
+        if (splited == null) {
+            return;
+        }
+        if (!this.head) {
+            this.pushHead(splited);
+            return;
+        }
+        if (!this.align) {
+            this.pushAlign(splited);
+            return;
+        }
+        this.pushBody(splited);
     }
     completed(line: string, at: number) {
         if (line == '') {

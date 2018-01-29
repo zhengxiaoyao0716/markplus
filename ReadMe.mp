@@ -136,26 +136,20 @@ npm i --save-dev markplus
 $lang/2
 ## 插件
 ## Plugin
-### Via `.markplusrc`:
+### Via `.markplusrc`, `markplusrc.json`:
 ``` json
 { "plugin": ["PLUGIN_NAME"] }
 ```
-$lang/2
-`Markplus` 会自动加载 `.markplusrc`。
-Then Markplus will auto load `.markplusrc`.
 
-### Via `*rc` , `*.json`:
-$lang/2
-与 `.markplusrc` 类似，但你需要用 `markplus -c <config.json> ...` 来加载它。
-Similar to `.markplusrc`, but you need use `markplus -c <config.json> ...` to load it.
-
-### Via `JavaScript`:
+### Via `markplus.config.js`:
 ``` nodejs
 exports.default = { plugin: [require('./MARKPLUS_PLUGIN_MODULE').default] };
 ```
+
+### Via `.*rc`, `*.json`, `*.config.js`:
 $lang/2
-然后通过 `markplus -c <config.js> ...` 来加载它.
-Then use `markplus -c <config.js> ...` to load it.
+通过 `markplus -c <config.js> ...` 来加载它.
+Use `markplus -c <config.js> ...` to load it.
 
 $lang/2
 ### 带参数的配置:
@@ -169,10 +163,7 @@ const config = {
 ```
 
 
-$_ /:178
-
-
-
+$_ /:169
 
 
 
