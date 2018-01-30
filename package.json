@@ -1,6 +1,6 @@
 {
   "name": "markplus",
-  "version": "0.3.0",
+  "version": "0.3.5",
   "description": "The strengthening of the `Markdown`.",
   "main": "index.js",
   "bin": {
@@ -8,9 +8,9 @@
   },
   "scripts": {
     "build": "babel src --out-dir lib -s && node ./bin/markplus ReadMe.mp -o index.html",
-    "start": "npm run build && start index.html",
+    "start": "npm run build && npm run build-example && start index.html",
     "test": "npm run build && node lib/test.js",
-    "example": "node ./bin/markplus ./examples/table.mp -o ./examples/table.html"
+    "build-example": "node ./bin/markplus ./examples/table.mp -o ./examples/table.html"
   },
   "repository": {
     "type": "git",

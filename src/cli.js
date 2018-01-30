@@ -39,8 +39,8 @@ const compile = () => {
             '<style>body { margin: 0; width: 100%; height: 100%; }</style>\n',
             `<script>\n    ${code(mp).replace(/\r?\n/g, '\n    ').replace(/ {4}\n/g, '\n').trim()}\n</script>\n`,
             `<script>\n    ${dump(mp).replace(/\r?\n/g, '\n    ').replace(/ {4}\n/g, '\n').trim()}\n</script>\n`,
-            '<div id="markplus"></div>\n',
-            `<script>new ${mp.name}.default().render(document.querySelector('#markplus'));</script>\n`,
+            `<div id="markplus${mp.name}"></div>\n`,
+            `<script>new ${mp.name}.default(document.querySelector('#markplus${mp.name}'));</script>\n`,
             '',
         ].join('\n'))
         .then(output => commander.out ?

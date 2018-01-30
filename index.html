@@ -130,8 +130,8 @@
 
     .Markplus-catalog>a.fold {
         position: absolute;
-        top: 0;
         z-index: 1;
+        top: 0;
         right: 10px;
         margin-top: 10px;
         cursor: pointer;
@@ -195,6 +195,7 @@
 
     .Markplus-catalog>span.top {
         position: fixed;
+        z-index: 1;
         bottom: 0;
         width: 30vw;
         transition: top 0.5s, width 0.5s;
@@ -233,11 +234,12 @@
     .Markplus.full {
         padding: 0;
     }
-    .Markplus.full .Code {
+    .Markplus.full .Code-full {
+        width: 100%;
         height: 100%;
         margin: 0;
     }
-    .Markplus.hide {
+    .Markplus.full>:not(.Code-full) {
         display: none;
     }
     .Markplus .Code{background:#1E1E1E;}.Markplus .Code #full{color:#eee;}/* https://highlightjs.org/static/demo/styles/vs2015.css */.hljs{background:#1E1E1E;color:#DCDCDC}.hljs-keyword,.hljs-literal,.hljs-symbol,.hljs-name{color:#569CD6}.hljs-link{color:#569CD6;text-decoration:underline}.hljs-built_in,.hljs-type{color:#4EC9B0}.hljs-number,.hljs-class{color:#B8D7A3}.hljs-string,.hljs-meta-string{color:#D69D85}.hljs-regexp,.hljs-template-tag{color:#9A5334}.hljs-subst,.hljs-function,.hljs-title,.hljs-params,.hljs-formula{color:#DCDCDC}.hljs-comment,.hljs-quote{color:#57A64A;font-style:italic}.hljs-doctag{color:#608B4E}.hljs-meta,.hljs-meta-keyword,.hljs-tag{color:#9B9B9B}.hljs-variable,.hljs-template-variable{color:#BD63C5}.hljs-attr,.hljs-attribute,.hljs-builtin-name{color:#9CDCFE}.hljs-section{color:gold}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}.hljs-bullet,.hljs-selector-tag,.hljs-selector-id,.hljs-selector-class,.hljs-selector-attr,.hljs-selector-pseudo{color:#D7BA7D}.hljs-addition{background-color:#144212;display:inline-block;width:100%}.hljs-deletion{background-color:#600;display:inline-block;width:100%}</style>
@@ -337,9 +339,11 @@
         };
 
         var Markplus = {
-            container: function (container) {
-                return container.classList.add('Markplus'), container;
-            }(document.createElement('div')),
+            /** @type {HTMLElement} */
+            get container() {
+                throw new Error('could not access Markplus.container without context.');
+            },
+            /** render the parsered data to element */
             renders: [[function (payload) {
                 return typeof payload == 'string';
             }, function (payload) {
@@ -354,7 +358,7 @@
                 payload.filter(function (p) {
                     return p != null;
                 }).forEach(function (payload) {
-                    return Markplus.register(payload.at, payload);
+                    return Markplus.register(Markplus.container, payload.at, payload);
                 });
                 ele.classList.add('Array');
                 return ele;
@@ -377,6 +381,7 @@
             }, function () {
                 return document.createElement('span');
             }]],
+            /** replace the sugars to it's raw syntax */
             htmlSugars: [[/\[(.*?)\]\((.*?)\)/g, function () {
                 for (var _len = arguments.length, $ = Array(_len), _key = 0; _key < _len; _key++) {
                     $[_key] = arguments[_key];
@@ -403,12 +408,13 @@
                 })(html);
             },
 
+            /** decorators for each element before they would be insert into container */
             decorators: [function (ele, at) {
                 return ele.setAttribute('data-markplus-at', at);
             }, function (ele, at) {
                 return ele.id || (ele.id = 'L' + at);
             }],
-            register: function register(at, payload) {
+            register: function register(container, at, payload) {
                 var ele = this.renders.find(function (_ref3) {
                     var _ref4 = _slicedToArray(_ref3, 1),
                         cond = _ref4[0];
@@ -419,16 +425,31 @@
                 this.decorators.forEach(function (decorator) {
                     return decorator(ele, at, payload);
                 });
-                this.container.appendChild(ele);
-            }
-        };
-        var register = exports.register = Markplus.register.bind(Markplus);
+                container.appendChild(ele);
+            },
 
-        exports.default = /** @param {HTMLElement} container */function (container) {
-            return container.appendChild(Markplus.container);
+            /** processes to initialize the container  */
+            process: [
+            /** @param {HTMLElement} container */function (container) {
+                return container.classList.add('Markplus');
+            }]
         };
 
-        var version = exports.version = '0.3.0';
+        exports.default = /** @param {HTMLElement} container @param {(Markplus: { register: (at: number, payload: any) => void}) => void} ctx */function (container, ctx) {
+            var containerProperty = Object.getOwnPropertyDescriptor(Markplus, 'container');
+            Object.defineProperty(Markplus, 'container', { get: function get() {
+                    return container;
+                }, configurable: true });
+
+            Markplus.process.forEach(function (process) {
+                return process(container);
+            });
+            ctx({ register: Markplus.register.bind(Markplus, container) });
+
+            Object.defineProperty(Markplus, 'container', containerProperty);
+        };
+
+        var version = exports.version = '0.3.5';
 
         Markplus.renders.unshift([function (payload) {
             return payload instanceof Promise;
@@ -510,100 +531,104 @@
             }));
         });
 
-        (function (container) {
-            window.addEventListener('load', function () {
-                return function (parent) {
+        (function (cache) {
+            return Markplus.process.push(function (mpContainer) {
+                var container = document.createElement('div');
+                (function (parent) {
                     if (window.innerWidth / window.innerHeight > 1) {
                         parent.style.display = 'flex';
                     } else {
                         document.querySelector('#markplusCatalogDynamicStyleVertical').innerHTML = '\n                .Markplus-catalog>.Tabel, .Markplus-catalog>span.top { width: 100%; }\n                .Markplus-catalog>.Tabel { max-height: 1000vh; }\n                .Markplus-catalog.fold>.Tabel { width: 100%; max-height: 0vh; }\n            ';
                     }
-                    parent.insertBefore(container, Markplus.container);
-                }(Markplus.container.parentElement);
-            });
+                    parent.insertBefore(container, mpContainer);
+                })(mpContainer.parentElement);
 
-            container.classList.add('Markplus-catalog');
-            container.appendChild(function (span) {
-                return span.innerHTML = '<!-- markplus-plugin-render-catalog -->', span;
-            }(document.createElement('span')));
+                container.classList.add('Markplus-catalog');
+                container.appendChild(function (span) {
+                    return span.innerHTML = '<!-- markplus-plugin-render-catalog -->', span;
+                }(document.createElement('span')));
 
-            var foldButton = document.createElement('a');
-            container.appendChild(function (button) {
-                button.classList.add('fold');
-                button.addEventListener('click', function () {
-                    return container.classList[container.classList.contains('fold') ? 'remove' : 'add']('fold');
-                });
+                var foldButton = document.createElement('a');
+                container.appendChild(function (button) {
+                    button.classList.add('fold');
+                    button.addEventListener('click', function () {
+                        return container.classList[container.classList.contains('fold') ? 'remove' : 'add']('fold');
+                    });
 
-                return button;
-            }(foldButton));
+                    return button;
+                }(foldButton));
 
-            var tabArea = document.createElement('div');
-            tabArea.classList.add('Tabel');
-            container.appendChild(tabArea);
+                var tabArea = document.createElement('div');
+                tabArea.classList.add('Tabel');
+                container.appendChild(tabArea);
 
-            var scrollTo = function scrollTo(target) {
-                var styleTop = function styleTop() {
-                    return Math.min(target.offsetTop - target.offsetParent.offsetTop, container.clientHeight - tabArea.clientHeight);
+                var scrollTo = function scrollTo(target) {
+                    var styleTop = function styleTop() {
+                        return Math.min(target.offsetTop - container.offsetTop, container.clientHeight - tabArea.clientHeight);
+                    };
+                    target && [tabArea, foldButton].forEach(function (dom) {
+                        return dom.style.top = styleTop() + 'px';
+                    });
                 };
-                target && target.offsetParent && [tabArea, foldButton].forEach(function (dom) {
-                    return dom.style.top = styleTop() + 'px';
-                });
-            };
-
-            var backTop = document.createElement('span');
-            container.appendChild(function (button) {
-                button.innerText = '︽';
-                button.classList.add('top');
-                button.addEventListener('click', function () {
-                    location.hash = location.hash ? '' : '#top';
-                    scrollTo(Markplus.container);
+                cache.scrollToTop.push(function () {
+                    return scrollTo(mpContainer);
                 });
 
-                return button;
-            }(backTop));
+                var backTop = document.createElement('span');
+                container.appendChild(function (button) {
+                    button.innerText = '︽';
+                    button.classList.add('top');
+                    button.addEventListener('click', function () {
+                        location.hash = location.hash ? '' : '#top';
+                        cache.scrollToTop.forEach(function (scroll) {
+                            return scroll();
+                        });
+                    });
+                    return button;
+                }(backTop));
 
-            var hashAvailable = function hashAvailable() {
-                return location.hash.slice(1) && location.hash != '#top';
-            };
-            var dynamicStyle = document.querySelector('#markplusCatalogDynamicStyleTab');
-            ['load', 'hashchange'].forEach(function (event) {
-                return window.addEventListener(event, function () {
-                    var firstTab = container.querySelector('.Tabel span.tab');
-                    var hash = decodeURIComponent(hashAvailable() ? location.hash : firstTab && firstTab.getAttribute('to'));
-                    dynamicStyle.innerHTML = '.Markplus-catalog>.Tabel span.tab[to="' + hash + '"] { color: #fff; }';
-                    hashAvailable() && scrollTo(Markplus.container.querySelector('.Header' + hash) || Markplus.container.querySelector(hash) || document.querySelector(hash));
+                var hashAvailable = function hashAvailable() {
+                    return location.hash.slice(1) && location.hash != '#top';
+                };
+                var dynamicStyle = document.querySelector('#markplusCatalogDynamicStyleTab');
+                ['load', 'hashchange'].forEach(function (event) {
+                    return window.addEventListener(event, function () {
+                        var firstTab = container.querySelector('.Tabel span.tab');
+                        var hash = decodeURIComponent(hashAvailable() ? location.hash : firstTab && firstTab.getAttribute('to'));
+                        dynamicStyle.innerHTML = '.Markplus-catalog>.Tabel span.tab[to="' + hash + '"] { color: #fff; }';
+                        hashAvailable() && scrollTo(mpContainer.querySelector('.Header' + hash) || mpContainer.querySelector(hash));
+                    });
                 });
+
+                var catalog = /** @param {HTMLElement} ele */function catalog(ele) {
+                    if (!ele) {
+                        return container;
+                    }
+                    ele.addEventListener('click', function () {
+                        return scrollTo(ele);
+                    });
+
+                    var tab = document.createElement('span');
+                    tab.innerText = ele.innerText;
+                    tab.classList.add('tab');
+                    tab.classList.add('tab-' + ele.getAttribute('data-markplus-header-level'));
+                    tab.setAttribute('to', '#' + ele.id);
+                    tab.addEventListener('click', function () {
+                        return location.hash = ele.id;
+                    });
+                    tabArea.appendChild(tab);
+                };
+                Markplus.decorators.push(function (ele) {
+                    return ele.classList.contains('Header') && Markplus.container == mpContainer && catalog(ele);
+                });
+
+                return container;
             });
+        })({ scrollToTop: [] });
 
-            var catalog = /** @param {HTMLElement} ele */function catalog(ele) {
-                if (!ele) {
-                    return container;
-                }
-                ele.addEventListener('click', function () {
-                    return scrollTo(ele);
-                });
-
-                var tab = document.createElement('span');
-                tab.innerText = ele.innerText;
-                tab.classList.add('tab');
-                tab.classList.add('tab-' + ele.getAttribute('data-markplus-header-level'));
-                tab.setAttribute('to', '#' + ele.id);
-                tab.addEventListener('click', function () {
-                    return location.hash = ele.id;
-                });
-                tabArea.appendChild(tab);
-            };
-            Markplus.decorators.push(function (ele) {
-                return ele.classList.contains('Header') && catalog(ele);
-            });
-
-            return container;
-        })(document.createElement('div'));
-
-        (function () {
+        Markplus.process.push(function (mpContainer) {
             var container = document.createElement('div');
-            container.classList.add('Markplus');
-            container.classList.add('full');
+            container.classList.add('Code-full');
 
             var highlight = function highlight(ele) {
                 return ele.querySelector('#full').addEventListener('click', function () {
@@ -612,12 +637,14 @@
 
                     full.id = '_full_' + ele.id;
                     full.className = ele.className;
+                    full.classList.add('full');
                     full.innerHTML = ele.innerHTML;
                     Array.from(full.querySelectorAll('.hljs')).forEach(function (hljs) {
                         return hljs.setAttribute('contenteditable', true);
                     });
                     full.querySelector('#full').addEventListener('click', function () {
-                        Markplus.container.classList.remove('hide');
+                        mpContainer.classList.remove('full');
+                        console.log(mpContainer.classList);
                         container.parentElement.removeChild(container);
                         ele.innerHTML = full.innerHTML;
                         container.innerHTML = '';
@@ -628,15 +655,15 @@
                         location.hash = ele.id;
                     });
 
-                    Markplus.container.classList.add('hide');
-                    Markplus.container.parentElement.insertBefore(container, Markplus.container);
+                    mpContainer.classList.add('full');
+                    mpContainer.appendChild(container);
                     location.hash = full.id;
                 });
             };
             Markplus.decorators.push(function (ele, _, payload) {
                 return ele.classList.contains('Code') && highlight(ele);
             });
-        })();
+        });
     });
 </script>
 
@@ -660,23 +687,12 @@
             value: true
         });
 
-        var Markplus = _interopRequireWildcard(_Markplus);
+        var _Markplus2 = _interopRequireDefault(_Markplus);
 
-        function _interopRequireWildcard(obj) {
-            if (obj && obj.__esModule) {
-                return obj;
-            } else {
-                var newObj = {};
-
-                if (obj != null) {
-                    for (var key in obj) {
-                        if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key];
-                    }
-                }
-
-                newObj.default = obj;
-                return newObj;
-            }
+        function _interopRequireDefault(obj) {
+            return obj && obj.__esModule ? obj : {
+                default: obj
+            };
         }
 
         function _classCallCheck(instance, Constructor) {
@@ -685,28 +701,12 @@
             }
         }
 
-        var _createClass = function () {
-            function defineProperties(target, props) {
-                for (var i = 0; i < props.length; i++) {
-                    var descriptor = props[i];
-                    descriptor.enumerable = descriptor.enumerable || false;
-                    descriptor.configurable = true;
-                    if ("value" in descriptor) descriptor.writable = true;
-                    Object.defineProperty(target, descriptor.key, descriptor);
-                }
-            }
+        var MarkplusDocument = function MarkplusDocument(container) {
+            var _this = this;
 
-            return function (Constructor, protoProps, staticProps) {
-                if (protoProps) defineProperties(Constructor.prototype, protoProps);
-                if (staticProps) defineProperties(Constructor, staticProps);
-                return Constructor;
-            };
-        }();
+            _classCallCheck(this, MarkplusDocument);
 
-        var MarkplusDocument = function () {
-            function MarkplusDocument() {
-                _classCallCheck(this, MarkplusDocument);
-
+            (0, _Markplus2.default)(container, function (Markplus) {
                 Markplus.register(0, { "tag": "span", "html": "<!-- https://github.com/zhengxiaoyao0716/markplus -->", "class": "Comments" });
                 Markplus.register(1, console.log('Markplus:', '{\n' // `$IDENT ...args` used to call the ident function with args
                 ));
@@ -716,7 +716,7 @@
                 ));
                 Markplus.register(7, void ("======== ======== ======== ======== ======== ======== ======== ========         // not equals to `$_/N` (without white-space), the latter will execute the codes.", "(^_^) Those block only visible in source to make things looks tidiness.", "======== ======== ======== ======== ======== ======== ======== ========", "" // equals to `$void /4`, nothing would execute but next N lines was gone.
                 ));
-                var hitokoto = this.hitokoto = function () {
+                var hitokoto = _this.hitokoto = function () {
                     for (var _len = arguments.length, words = Array(_len), _key = 0; _key < _len; _key++) {
                         words[_key] = arguments[_key];
                     }
@@ -742,7 +742,7 @@
                     return result // you could use `#IDENT(...args) /N` to define a function composed by mutli-line functions.
                     ;
                 };
-                var lang = this.lang = function () {
+                var lang = _this.lang = function () {
                     var result = void 0;
                     result = function () {
                         return location.search.match(/lang=(\w+)/) // the function defined below would be executed immediately.
@@ -764,7 +764,7 @@
                     return result // `/N` followed `IDENT` directly without white-space,
                     ;
                 }();
-                var version = this.version = function () {
+                var version = _this.version = function () {
                     return Markplus.version // `#IDENT/value` means `#IDENT/0 value`, you can use this to define constant.
                     ;
                 }();
@@ -807,7 +807,7 @@
                 }));
                 Markplus.register(242, { "tag": "span", "html": "<br>", "class": "Plain" });
                 Markplus.register(243, { "tag": "span", "html": "<br>", "class": "Divider Divider-dashed" });
-                var remoteHitokoto = this.remoteHitokoto = function (url) {
+                var remoteHitokoto = _this.remoteHitokoto = function (url) {
                     var result = void 0;
                     result = function () {
                         return 'a'.charCodeAt(0) + parseInt(Math.random() * 4);
@@ -834,23 +834,14 @@
                 Markplus.register(249, lang({ "tag": "span", "html": "<span>每日一言</span><br>", "class": "Header Header-4", "data-markplus-header-level": 4, "id": "每日一言", "at": 250 }, { "tag": "span", "html": "<span>Daily words</span><br>", "class": "Header Header-4", "data-markplus-header-level": 4, "id": "dailyWords", "at": 251 }, { "tag": "span", "html": "<span>ひとこと</span><br>", "class": "Header Header-4", "data-markplus-header-level": 4, "id": "ひとこと", "at": 252 }));
                 Markplus.register(253, remoteHitokoto('https://sslapi.hitokoto.cn/'));
                 Markplus.register(254, { "tag": "span", "html": "<br>", "class": "Plain" });
-            }
-
-            _createClass(MarkplusDocument, [{
-                key: "render",
-                value: function render(container) {
-                    Markplus.default(container);
-                }
-            }]);
-
-            return MarkplusDocument;
-        }();
+            });
+        };
 
         exports.default = MarkplusDocument;
     });
 </script>
 
-<div id="markplus"></div>
+<div id="markplusMarkplusDocument"></div>
 
-<script>new MarkplusDocument.default().render(document.querySelector('#markplus'));</script>
+<script>new MarkplusDocument.default(document.querySelector('#markplusMarkplusDocument'));</script>
 

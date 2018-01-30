@@ -16,13 +16,12 @@ const CorePlugin = (self: Markplus, pkg: { version: string }) => {
         head: () => `<!DOCTYPE html>\n<!-- Markplus: ${self.name} -->\n<meta charset="UTF-8">\n<title>${self.name}</title>\n<script>${polyfill}</script>`,
         code: () => `${withEscape}\n${Render}export const version = '${pkg.version}';\n`,
         dump: () => `
-            import * as Markplus from 'Markplus';
+            import Markplus from 'Markplus';
             class ${self.name} {
-                constructor() {
-                    ${self.elements.map(ele => ele.dump()).join('\n').replace(/\r?\n/g, '\n                    ')}
-                }
-                render(container) {
-                    Markplus.default(container);
+                constructor(container) {
+                    Markplus(container, Markplus => {
+                        ${self.elements.map(ele => ele.dump()).join('\n').replace(/\r?\n/g, `\n${' '.repeat(4 * 6)}`)}
+                    });
                 }
             }
             export default ${self.name};
