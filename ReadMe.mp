@@ -164,10 +164,6 @@ const config = {
 ```
 
 
-$_ /:169
-
-
-
 ===
 $lang/60
 $Array/29
@@ -176,7 +172,7 @@ $Array/29
 易用，易扩展
 
 ### 加强表格
-混合单元格，宏计算
+混合单元格，宏计算 [examples/table.mp](./examples/table.html)
 
 ### 更清晰的语义
 何时换行，何时滚动
@@ -206,7 +202,7 @@ $Array/29
 Easy to embedded, Convenient extension.
 
 ### Strengthing for `Table` .
-Multi-unit-grid, Macro calculate.
+Multi-unit-grid, Macro calculate. [examples/table.mp](./exmaples/table.html)
 
 ### Clearer semantics.
 When to break line, When to scroll.
