@@ -413,6 +413,10 @@
                 return ele.setAttribute('data-markplus-at', at);
             }, function (ele, at) {
                 return ele.id || (ele.id = 'L' + at);
+            }, function (ele, at, payload) {
+                return payload && payload.nested && payload.nested.forEach(function (payload, index) {
+                    return Markplus.register(ele.querySelector('*[data-markplus-nested="' + index + '"]'), index, payload);
+                });
             }],
             register: function register(container, at, payload) {
                 var ele = this.renders.find(function (_ref3) {
@@ -421,11 +425,11 @@
 
                     return cond(payload);
                 })[1](payload);
+                container.appendChild(ele);
                 this.replaceHtml(ele, ele.innerHTML);
                 this.decorators.forEach(function (decorator) {
                     return decorator(ele, at, payload);
                 });
-                container.appendChild(ele);
             },
 
             /** processes to initialize the container  */
@@ -449,7 +453,7 @@
             Object.defineProperty(Markplus, 'container', containerProperty);
         };
 
-        var version = exports.version = '0.3.6';
+        var version = exports.version = '0.3.7';
 
         Markplus.renders.unshift([function (payload) {
             return payload instanceof Promise;
@@ -563,8 +567,12 @@
                 container.appendChild(tabArea);
 
                 var scrollTo = function scrollTo(target) {
+                    var offsetTop = function offsetTop(target) {
+                        var pt = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+                        return target.offsetParent ? offsetTop(target.offsetParent, pt + target.offsetTop) : pt + target.offsetTop;
+                    };
                     var styleTop = function styleTop() {
-                        return Math.min(target.offsetTop - container.offsetTop, container.clientHeight - tabArea.clientHeight);
+                        return Math.min(offsetTop(target) - offsetTop(container), container.clientHeight - tabArea.clientHeight);
                     };
                     target && [tabArea, foldButton].forEach(function (dom) {
                         return dom.style.top = styleTop() + 'px';
@@ -602,11 +610,17 @@
 
                 var catalog = /** @param {HTMLElement} ele */function catalog(ele) {
                     if (!ele) {
-                        return container;
+                        return;
                     }
-                    ele.addEventListener('click', function () {
-                        return scrollTo(ele);
+                    Array.prototype.forEach.call(ele.querySelectorAll(':not(.hash)'), function (child) {
+                        return child.addEventListener('click', function () {
+                            return scrollTo(ele);
+                        });
                     });
+
+                    if (!ele.parentElement == mpContainer) {
+                        return;
+                    }
 
                     var tab = document.createElement('span');
                     tab.innerText = ele.innerText;
@@ -619,10 +633,8 @@
                     tabArea.appendChild(tab);
                 };
                 Markplus.decorators.push(function (ele) {
-                    return ele.classList.contains('Header') && Markplus.container == mpContainer && catalog(ele);
+                    return ele.classList.contains('Header') && catalog(ele);
                 });
-
-                return container;
             });
         })({ scrollToTop: [] });
 
@@ -871,7 +883,7 @@
                     )), Array({ "tag": "span", "html": "<span>Base goal</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2, "id": "baseGoal", "at": 204 }, { "tag": "span", "html": "<span>More perfect tool chain.</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "morePerfectToolChain", "at": 205 }, { "tag": "span", "html": "Easy to embedded, Convenient extension.<br>", "class": "Plain", "at": 206 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 207 }, { "tag": "span", "html": "<span>Strengthing for `Table` .</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "strengthingForTable", "at": 208 }, { "tag": "span", "html": "Multi-unit-grid, Macro calculate.<br>", "class": "Plain", "at": 209 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 210 }, { "tag": "span", "html": "<span>Clearer semantics.</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "clearerSemantics", "at": 211 }, { "tag": "span", "html": "When to break line, When to scroll.<br>", "class": "Plain", "at": 212 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 213 }, { "tag": "span", "html": "<span>Dynamic interactivity.</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "dynamicInteractivity", "at": 214 }, { "tag": "span", "html": "Optional\\ configurable and safety dynamic perform.<br>", "class": "Plain", "at": 215 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 216 }, { "tag": "span", "html": "<span>Reasonable structure.</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "reasonableStructure", "at": 217 }, { "tag": "span", "html": "Reusable, Inheritable.<br>", "class": "Plain", "at": 218 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 219 }, { "tag": "span", "html": "<span>Flexible usage.</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "flexibleUsage", "at": 220 }, { "tag": "span", "html": "Precompiled\\ Runtime-render.<br>", "class": "Plain", "at": 221 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 222 }, { "tag": "span", "html": "<span>But, All the premises: Keep Simple.</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "butAllThePremisesKeepSimple", "at": 223 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 224 }, void ("", "", "", "", "", "", ""))));
                     Markplus.register(233, Array.prototype.fill.bind(new Array(3))({ "tag": "span", "html": "<br>", "class": "Divider Divider-solid", "at": 234 }));
                     Markplus.register(235, { "tag": "span", "html": "<br>", "class": "Plain" });
-                    Markplus.register(236, hitokoto({ "tag": "span", "html": "<span>#### 我的个性签名：</span><br><span class=\"Block Block-nested\"><span>爱冷剑，怜悲箫，月下狼孤啸；轻点画，慢勾描，云中人逍遥。</span><br></span>", "class": "Block", "at": 237 }, { "tag": "span", "html": "<span>#### 我的GitHub：</span><br><span class=\"Block Block-nested\"><span>https://github.com/zhengxiaoyao0716</span><br></span>", "class": "Block", "at": 240 // since empty line could mark the end of `Block`, it would be used as an argument of `hitokoto/2`. so we should use `>` to mark the end.
+                    Markplus.register(236, hitokoto({ tag: 'span', html: '<span data-markplus-nested="0"></span><span class="Block Block-nested"><span data-markplus-nested="1"></span></span>', class: 'Block', nested: [{ "tag": "span", "html": "<span>我的个性签名：</span><br>", "class": "Header Header-4", "data-markplus-header-level": 4, "id": "我的个性签名：" }, { "tag": "span", "html": "爱冷剑，怜悲箫，月下狼孤啸；轻点画，慢勾描，云中人逍遥。<br>", "class": "Plain" }] }, { tag: 'span', html: '<span data-markplus-nested="0"></span><span class="Block Block-nested"><span data-markplus-nested="1"></span></span>', class: 'Block', nested: [{ "tag": "span", "html": "<span>我的GitHub：</span><br>", "class": "Header Header-4", "data-markplus-header-level": 4, "id": "gitHub" }, { "tag": "span", "html": "https://github.com/zhengxiaoyao0716<br>", "class": "Plain" }] // since empty line could mark the end of `Block`, it would be used as an argument of `hitokoto/2`. so we should use `>` to mark the end.
                     }));
                     Markplus.register(243, { "tag": "span", "html": "<br>", "class": "Plain" });
                     Markplus.register(244, { "tag": "span", "html": "<br>", "class": "Divider Divider-dashed" });

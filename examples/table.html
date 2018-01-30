@@ -413,6 +413,10 @@
                 return ele.setAttribute('data-markplus-at', at);
             }, function (ele, at) {
                 return ele.id || (ele.id = 'L' + at);
+            }, function (ele, at, payload) {
+                return payload && payload.nested && payload.nested.forEach(function (payload, index) {
+                    return Markplus.register(ele.querySelector('*[data-markplus-nested="' + index + '"]'), index, payload);
+                });
             }],
             register: function register(container, at, payload) {
                 var ele = this.renders.find(function (_ref3) {
@@ -421,11 +425,11 @@
 
                     return cond(payload);
                 })[1](payload);
+                container.appendChild(ele);
                 this.replaceHtml(ele, ele.innerHTML);
                 this.decorators.forEach(function (decorator) {
                     return decorator(ele, at, payload);
                 });
-                container.appendChild(ele);
             },
 
             /** processes to initialize the container  */
@@ -449,7 +453,7 @@
             Object.defineProperty(Markplus, 'container', containerProperty);
         };
 
-        var version = exports.version = '0.3.6';
+        var version = exports.version = '0.3.7';
 
         Markplus.renders.unshift([function (payload) {
             return payload instanceof Promise;
@@ -563,8 +567,12 @@
                 container.appendChild(tabArea);
 
                 var scrollTo = function scrollTo(target) {
+                    var offsetTop = function offsetTop(target) {
+                        var pt = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+                        return target.offsetParent ? offsetTop(target.offsetParent, pt + target.offsetTop) : pt + target.offsetTop;
+                    };
                     var styleTop = function styleTop() {
-                        return Math.min(target.offsetTop - container.offsetTop, container.clientHeight - tabArea.clientHeight);
+                        return Math.min(offsetTop(target) - offsetTop(container), container.clientHeight - tabArea.clientHeight);
                     };
                     target && [tabArea, foldButton].forEach(function (dom) {
                         return dom.style.top = styleTop() + 'px';
@@ -602,11 +610,17 @@
 
                 var catalog = /** @param {HTMLElement} ele */function catalog(ele) {
                     if (!ele) {
-                        return container;
+                        return;
                     }
-                    ele.addEventListener('click', function () {
-                        return scrollTo(ele);
+                    Array.prototype.forEach.call(ele.querySelectorAll(':not(.hash)'), function (child) {
+                        return child.addEventListener('click', function () {
+                            return scrollTo(ele);
+                        });
                     });
+
+                    if (!ele.parentElement == mpContainer) {
+                        return;
+                    }
 
                     var tab = document.createElement('span');
                     tab.innerText = ele.innerText;
@@ -619,10 +633,8 @@
                     tabArea.appendChild(tab);
                 };
                 Markplus.decorators.push(function (ele) {
-                    return ele.classList.contains('Header') && Markplus.container == mpContainer && catalog(ele);
+                    return ele.classList.contains('Header') && catalog(ele);
                 });
-
-                return container;
             });
         })({ scrollToTop: [] });
 
@@ -773,41 +785,46 @@
             _createClass(MarkplusExampleTable, [{
                 key: "render",
                 value: function render(Markplus) {
+                    var _this2 = this;
+
                     Markplus.register(0, { "tag": "span", "html": "<!-- https://github.com/zhengxiaoyao0716/markplus -->", "class": "Comments" });
                     Markplus.register(1, { "tag": "span", "html": "<span>markplus-example-table</span><br>", "class": "Header Header-1", "data-markplus-header-level": 1, "id": "markplusExampleTable" });
                     Markplus.register(2, { "tag": "span", "html": "<br>", "class": "Plain" });
                     Markplus.register(3, { "tag": "span", "html": "<br>", "class": "Divider Divider-bold" });
                     Markplus.register(4, { "tag": "span", "html": "<span>Simple Usage:</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2, "id": "simpleUsage" });
-                    var _5 = {};
-                    Markplus.register(5, _extends({ "tag": "span", "html": "<table><thead><tr><th>ID</th><th>Group</th><th>Name</th></tr></thead><tbody><tr><td>0</td><td>Manager</td><td>Zheng</td></tr><tr><td>1</td><td>User</td><td>Alice</td></tr><tr><td>2</td><td>Guide</td><td>Bob</td></tr></tbody><tfoot></tfoot></table>", "class": "Table", "names": ["ID", "Group", "Name"] }, { parser: [,,], macro: [], table: _5 }));
+                    Markplus.register(5, function () {
+                        var _5 = {};return _extends({ "tag": "span", "html": "<table><thead><tr><th>ID</th><th>Group</th><th>Name</th></tr></thead><tbody><tr><td>0</td><td>Manager</td><td>Zheng</td></tr><tr><td>1</td><td>User</td><td>Alice</td></tr><tr><td>2</td><td>Guide</td><td>Bob</td></tr></tbody><tfoot></tfoot></table>", "class": "Table", "names": ["ID", "Group", "Name"] }, { parser: [,,], macro: [], table: _5 });
+                    }());
                     Markplus.register(9, { "tag": "span", "html": "<br>", "class": "Plain" });
                     Markplus.register(10, { "tag": "span", "html": "<span>Compatible Markdown:</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2, "id": "compatibleMarkdown" });
-                    var _11 = {};
-                    Markplus.register(11, _extends({ "tag": "span", "html": "<table><thead><tr><th>ID</th><th>Group</th><th>Name</th></tr></thead><tbody><tr><td align=\"left\">0</td><td align=\"center\">Manager</td><td align=\"right\">Zheng</td></tr><tr><td align=\"left\">1</td><td align=\"center\">User</td><td align=\"right\">Alice</td></tr><tr><td align=\"left\">2</td><td align=\"center\">Guide</td><td align=\"right\">Bob</td></tr></tbody><tfoot></tfoot></table>", "class": "Table", "names": ["ID", "Group", "Name"] }, { parser: [,,], macro: [], table: _11 }));
+                    Markplus.register(11, function () {
+                        var _11 = {};return _extends({ "tag": "span", "html": "<table><thead><tr><th>ID</th><th>Group</th><th>Name</th></tr></thead><tbody><tr><td align=\"left\">0</td><td align=\"center\">Manager</td><td align=\"right\">Zheng</td></tr><tr><td align=\"left\">1</td><td align=\"center\">User</td><td align=\"right\">Alice</td></tr><tr><td align=\"left\">2</td><td align=\"center\">Guide</td><td align=\"right\">Bob</td></tr></tbody><tfoot></tfoot></table>", "class": "Table", "names": ["ID", "Group", "Name"] }, { parser: [,,], macro: [], table: _11 });
+                    }());
                     Markplus.register(18, { "tag": "span", "html": "<br>", "class": "Plain" });
                     Markplus.register(19, { "tag": "span", "html": "<span>Complete Feature:</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2, "id": "completeFeature" });
-                    var completeFeatureExample = this.completeFeatureExample = {};
-                    Markplus.register(20, _extends({ "tag": "span", "html": "<table><thead><tr><th align=\"left\">ID</th><th align=\"center\">Group</th><th align=\"center\">Name</th><th align=\"center\">Nickname</th><th align=\"right\">Billing</th><th>(F)</th></tr></thead><tbody><tr><th align=\"left\" data-markplus-table-macro=\"ID_0\">#ID_0</th><td align=\"center\">Manager</td><td align=\"center\" colspan=\"2\">Zheng</td><td style=\"display: none;\" data-markplus-table-ref=\":nth-child(1)>:nth-child(3)\"></td><td align=\"right\">0</td><th data-markplus-table-macro=\"F_0\">#F_0</th></tr><tr><th align=\"left\" data-markplus-table-macro=\"ID_1\">#ID_1</th><td align=\"center\" rowspan=\"2\">User</td><td align=\"center\">Alice</td><td align=\"center\">Ali</td><td align=\"right\">3.00</td><th data-markplus-table-macro=\"F_1\">#F_1</th></tr><tr><th align=\"left\" data-markplus-table-macro=\"ID_2\">#ID_2</th><td style=\"display: none;\" data-markplus-table-ref=\":nth-child(2)>:nth-child(2)\"></td><td align=\"center\" colspan=\"2\">Bob</td><td style=\"display: none;\" data-markplus-table-ref=\":nth-child(3)>:nth-child(3)\"></td><td align=\"right\">3.50</td><th data-markplus-table-macro=\"F_2\">#F_2</th></tr><tr><th align=\"left\" data-markplus-table-macro=\"ID_3\">#ID_3</th><td align=\"center\" colspan=\"3\"></td><td style=\"display: none;\" data-markplus-table-ref=\":nth-child(4)>:nth-child(2)\"></td><td style=\"display: none;\" data-markplus-table-ref=\":nth-child(4)>:nth-child(2)\"></td><th align=\"right\" data-markplus-table-macro=\"Billing_3\">#Billing_3</th><td></td></tr></tbody><tfoot><tr><td align=\"center\" colspan=\"6\">Complete feature example</td></tr></tfoot></table>", "class": "Table", "id": "completeFeatureExample", "names": ["ID", "Group", "Name", "Nickname", "Billing", "F"] }, { parser: [parseInt,,,, parseFloat], macro: [['ID_0', function (ID, Group, Name, Nickname, Billing, F) {
-                            var L = 0;return "0";
-                        }], ['F_0', function (ID, Group, Name, Nickname, Billing, F) {
-                            var L = 0;return "#" + ID[0] + " | $" + Billing[0];
-                        }], ['ID_1', function (ID, Group, Name, Nickname, Billing, F) {
-                            var L = 1;return "" + (1 + ID[L - 1]);
-                        }], ['F_1', function (ID, Group, Name, Nickname, Billing, F) {
-                            var L = 1;return "#" + ID[1] + " | $" + Billing[1];
-                        }], ['ID_2', function (ID, Group, Name, Nickname, Billing, F) {
-                            var L = 2;return "" + (1 + ID[L - 1]);
-                        }], ['F_2', function (ID, Group, Name, Nickname, Billing, F) {
-                            var L = 2;return "#" + ID[2] + " | $" + Billing[2];
-                        }], ['ID_3', function (ID, Group, Name, Nickname, Billing, F) {
-                            var L = 3;return "" + (1 + ID[L - 1]);
-                        }], ['Billing_3', function (ID, Group, Name, Nickname, Billing, F) {
-                            var L = 3;return "" + Billing.slice(0, -1).reduce(function (s, i) {
-                                return s + i;
-                            });
-                        }]], table: completeFeatureExample }));
-                    Markplus.register(27, void (window.completeFeatureExample = Object.keys(completeFeatureExample).map(function (k) {
-                        return k + ": " + completeFeatureExample[k];
+                    Markplus.register(20, function () {
+                        var completeFeatureExample = _this2.completeFeatureExample = {};return _extends({ "tag": "span", "html": "<table><thead><tr><th align=\"left\">ID</th><th align=\"center\">Group</th><th align=\"center\">Name</th><th align=\"center\">Nickname</th><th align=\"right\">Billing</th><th>(F)</th></tr></thead><tbody><tr><th align=\"left\" data-markplus-table-macro=\"ID_0\">#ID_0</th><td align=\"center\">Manager</td><td align=\"center\" colspan=\"2\">Zheng</td><td style=\"display: none;\" data-markplus-table-ref=\":nth-child(1)>:nth-child(3)\"></td><td align=\"right\">0</td><th data-markplus-table-macro=\"F_0\">#F_0</th></tr><tr><th align=\"left\" data-markplus-table-macro=\"ID_1\">#ID_1</th><td align=\"center\" rowspan=\"2\">User</td><td align=\"center\">Alice</td><td align=\"center\">Ali</td><td align=\"right\">3.00</td><th data-markplus-table-macro=\"F_1\">#F_1</th></tr><tr><th align=\"left\" data-markplus-table-macro=\"ID_2\">#ID_2</th><td style=\"display: none;\" data-markplus-table-ref=\":nth-child(2)>:nth-child(2)\"></td><td align=\"center\" colspan=\"2\">Bob</td><td style=\"display: none;\" data-markplus-table-ref=\":nth-child(3)>:nth-child(3)\"></td><td align=\"right\">3.50</td><th data-markplus-table-macro=\"F_2\">#F_2</th></tr><tr><th align=\"left\" data-markplus-table-macro=\"ID_3\">#ID_3</th><td align=\"center\" colspan=\"3\"></td><td style=\"display: none;\" data-markplus-table-ref=\":nth-child(4)>:nth-child(2)\"></td><td style=\"display: none;\" data-markplus-table-ref=\":nth-child(4)>:nth-child(2)\"></td><th align=\"right\" data-markplus-table-macro=\"Billing_3\">#Billing_3</th><td></td></tr></tbody><tfoot><tr><td align=\"center\" colspan=\"6\">Complete feature example</td></tr></tfoot></table>", "class": "Table", "id": "completeFeatureExample", "names": ["ID", "Group", "Name", "Nickname", "Billing", "F"] }, { parser: [parseInt,,,, parseFloat], macro: [['ID_0', function (ID, Group, Name, Nickname, Billing, F) {
+                                var L = 0;return "0";
+                            }], ['F_0', function (ID, Group, Name, Nickname, Billing, F) {
+                                var L = 0;return "#" + ID[0] + " | $" + Billing[0];
+                            }], ['ID_1', function (ID, Group, Name, Nickname, Billing, F) {
+                                var L = 1;return "" + (1 + ID[L - 1]);
+                            }], ['F_1', function (ID, Group, Name, Nickname, Billing, F) {
+                                var L = 1;return "#" + ID[1] + " | $" + Billing[1];
+                            }], ['ID_2', function (ID, Group, Name, Nickname, Billing, F) {
+                                var L = 2;return "" + (1 + ID[L - 1]);
+                            }], ['F_2', function (ID, Group, Name, Nickname, Billing, F) {
+                                var L = 2;return "#" + ID[2] + " | $" + Billing[2];
+                            }], ['ID_3', function (ID, Group, Name, Nickname, Billing, F) {
+                                var L = 3;return "" + (1 + ID[L - 1]);
+                            }], ['Billing_3', function (ID, Group, Name, Nickname, Billing, F) {
+                                var L = 3;return "" + Billing.slice(0, -1).reduce(function (s, i) {
+                                    return s + i;
+                                });
+                            }]], table: completeFeatureExample });
+                    }());
+                    Markplus.register(27, void (window.completeFeatureExample = Object.keys(this.completeFeatureExample).map(function (k) {
+                        return k + ": " + _this2.completeFeatureExample[k];
                     }).join('\n')));
                     Markplus.register(28, { "tag": "span", "html": "[EXPORT]($alert completeFeatureExample)<br>", "class": "Plain" });
                     Markplus.register(29, { "tag": "span", "html": "<br>", "class": "Plain" });

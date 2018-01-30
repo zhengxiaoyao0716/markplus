@@ -38,13 +38,13 @@ export class Element {
         return this.size == this.lines.length;
     }
     get json() { return this; }
-    dump() { return `Markplus.register(${this.at}, ${JSON.stringify({ ...this.json })});`; }
+    dump() { return `Markplus.register(${this.at}, ${this.expr || JSON.stringify({ ...this.json })});`; }
 }
 export class Invalid extends Element {
     constructor(line: string, at: number, reason: string) {
         super(1, line, at, { reason });
     }
-    dump() { return `console.error(${JSON.stringify(this)});`; }
+    get expr() { return `console.error(${JSON.stringify(this)})`; }
 }
 export class Save extends Element {
     static save = (name: string, content: string) => `const ${name}${name.startsWith('_') ? '' : ` = this.${name}`} = ${content};`;
@@ -71,7 +71,7 @@ export class Save extends Element {
             : `    ${[
                 'let result;',
                 ...this.lines.slice(1)
-                    .map(ele => ele instanceof Invalid ? `() => ${ele.dump()}` : ele.params)
+                    .map(ele => ele instanceof Invalid ? `() => ${ele.expr()};` : ele.params)
                     .map(({ args, extra = '' }) => `result = (${args || '()'} => (\n        ${extra}\n    ))(result);`),
             ].join('\n    ')}\n`;
         const linesResult = this.size == 1 ? '' : 'result';
@@ -91,8 +91,12 @@ export class Load extends Element {
             return;
         }
         const ele = Parser.Function.pipe(line, at) || Parser.HTMLElement.pipe(line, at);
-        if (!ele || ele instanceof Save) {
+        if (ele instanceof Code && !ele.symbol) {
             this.lines.push(line.slice(4));
+            return;
+        }
+        if (ele instanceof Save) {
+            this.lines.push(new Invalid(line, at, `nested 'Save' expression at line:${at} not support.`));
             return;
         }
         this.lines.push(ele);
@@ -108,9 +112,6 @@ export class Load extends Element {
                     : JSON.stringify
             ).join(',\n    ');
         return `${args ? `${name}.bind${args}` : name}(\n    ${lines}${extra}\n)`;
-    }
-    dump() {
-        return `Markplus.register(${this.at}, ${this.expr});`;
     }
     // completed(line: string, at: number) { // eslint-disable-line no-unused-vars
     //     if (this.lastLine instanceof Element && !this.lastLine.completed(line, at)) {
@@ -159,21 +160,22 @@ export class Code extends Element {
     static symbol = ['~~~', '```'];
     constructor(line: string, at: number, symbol?: string, language?: string) {
         super(-1, line, at, { language });
-        this.symbol = symbol || line;
+        this.symbol = symbol === undefined ? line : symbol;
         this.language = language || '';
     }
-    get json() {
-        return {
-            tag: 'pre',
-            html: this.lines.slice(1, this.size - 1).join('\n'),
-            class: `Code Code-${this.language}`,
-        };
-    }
+    get code() { return (this.symbol ? this.lines.slice(1, this.size - 1) : this.lines.map(line => line.slice(4))).join('\n'); }
+    get json() { return { tag: 'pre', html: this.code, class: `Code Code-${this.language}` }; }
     push(line: string, at: number) { // eslint-disable-line no-unused-vars
         this.lines.push(line);
         if (line == this.symbol) {
             this.size = this.lines.length;
         }
+    }
+    completed(line: string, at: number) {
+        if (!this.symbol && !line.startsWith('    ')) {
+            this.size = this.lines.length;
+        }
+        return super.completed(line, at);
     }
 }
 export class Divider extends Element {
@@ -189,11 +191,18 @@ export class Divider extends Element {
 export class Block extends Element {
     static symbol = '>';
     static regex = /^(>+)\s/;
+    static pipeNested = (line, at) => {
+        const ele = Parser.pipe(line);
+        if ((ele instanceof Code && !ele.symbol) || ele instanceof Save || ele instanceof Block) {
+            return new Plain(line, at);
+        }
+        return ele;
+    }
     constructor(line: string, at: number, indent: number) {
-        super(-1, line, at, {});
+        super(-1, Block.pipeNested(line.slice(1 + indent)), at, {});
         this.indents = [indent];
     }
-    get json() {
+    get expr() {
         const fold = (input: []) => {
             const output: [[]] = [];
             input.forEach(({ indent, content }) => {
@@ -208,15 +217,17 @@ export class Block extends Element {
             });
             return output.map(input => input instanceof Array ? fold(input) : input).reverse();
         };
+        const nested = [];
         const folded = fold(this.lines.map((line, index) => {
             const indent = this.indents[index];
-            const content = `<span>${line.match(Block.regex) ? line.slice(1 + indent) : line}</span>`;
+            const content = `<span data-markplus-nested="${nested.length}"></span>`;
+            nested.push(line.expr || JSON.stringify(line.json));
             return { indent, content };
         }));
         const map = (folded: []) => folded.map(line =>
-            line instanceof Array ? `<span class="Block Block-nested">${map(line)}</span>` : `${line}<br>`
+            line instanceof Array ? `<span class="Block Block-nested">${map(line)}</span>` : `${line}`
         ).join('');
-        return { tag: 'span', html: map(folded), class: 'Block' };
+        return `{ tag: 'span', html: '${map(folded)}', class: 'Block', nested: [${nested.join(', ')}] }`;
     }
     push(line: string, at: number) { // eslint-disable-line no-unused-vars
         if (line == Block.symbol.repeat(this.indents[0])) {
@@ -224,9 +235,15 @@ export class Block extends Element {
             return;
         }
         const mathced = line.match(Block.regex);
-        const content = mathced ? mathced[1].length : this.indents[this.indents.length - 1];
-        this.indents.push(content);
-        this.lines.push(line);
+        const indent = mathced ? mathced[1].length : this.indents[this.indents.length - 1];
+        const content = mathced ? line.slice(1 + mathced[1].length) : line;
+        const lastLine = this.lines[this.lines.length - 1];
+        if (indent == this.indents[this.indents.length - 1] && !lastLine.completed(content, at)) {
+            lastLine.push(content);
+            return;
+        }
+        this.indents.push(indent);
+        this.lines.push(Block.pipeNested(content));
     }
     completed(line: string, at: number) {
         if (line == '') {
@@ -239,7 +256,7 @@ export class More extends Element {
     static symbol = '^';
     constructor(line: string, at: number, symbol?: string, brief?: string) {
         super(-1, line, at, { brief });
-        this.symbol = symbol || line;
+        this.symbol = symbol;
         // this.brief = brief || '';
     }
     get json() {
@@ -286,7 +303,7 @@ export class Table extends Element {
         }
         this.pushHead(splited);
     }
-    dump() {
+    get expr() {
         const aligns = this.head.map(([, align]) => align);
         this.align.forEach((align, index) => aligns[index] = align);
         const rows: [[]] = new Array(this.body.length).fill().map(() => new Array(this.head.length).fill());
@@ -339,7 +356,7 @@ export class Table extends Element {
         const json = { tag: 'span', html, class: 'Table', ...this.name && { id }, names };
         const parser = this.head.map(([, , parser]) => parser).join(', ');
         const macro = macros.map(([name, expr]) => `['${name}', ${expr}]`).join(', ');
-        return `${Save.save(id, '{}')}\nMarkplus.register(${this.at}, { ...${JSON.stringify({ ...json })}, parser: [${parser}], macro: [${macro}], table: ${id} });`;
+        return `(() => { ${Save.save(id, '{}')} return { ...${JSON.stringify({ ...json })}, parser: [${parser}], macro: [${macro}], table: ${id} }; })()`;
     }
     pushHead = (splited: [string]) => {
         this.head = splited.map(t => t.slice(1))
@@ -521,7 +538,7 @@ const Parser = {
                 ...Array.from(More.symbol).reduce((o, s) => (o[s] = () => new More(line, at, s, content), o), {}),
                 ...(o => (o[Block.symbol.repeat(length)] = () => new Block(line, at, length), o))({}),
                 '\\': () => new Table(line, at, content),
-                '': () => line.startsWith('    ') ? false : new Plain(line, at), // 4 white-space means code.
+                '': () => line.startsWith('    ') ? new Code(line, at, '', 'text') : new Plain(line, at), // 4 white-space means code.
             })[type];
             if (!pipe) {
                 return new Plain(line, at, { type, content });

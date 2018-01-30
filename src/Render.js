@@ -57,6 +57,8 @@ const Markplus = {
     decorators: [
         (ele, at) => ele.setAttribute('data-markplus-at', at),
         (ele, at) => ele.id || (ele.id = `L${at}`),
+        (ele, at, payload) => payload && payload.nested && payload.nested.forEach((payload, index) =>
+            Markplus.register(ele.querySelector(`*[data-markplus-nested="${index}"]`), index, payload)),
     ],
     /**
      * 
@@ -66,9 +68,9 @@ const Markplus = {
      */
     register(container, at, payload) {
         const ele = this.renders.find(([cond]) => cond(payload))[1](payload);
+        container.appendChild(ele);
         this.replaceHtml(ele, ele.innerHTML);
         this.decorators.forEach(decorator => decorator(ele, at, payload));
-        container.appendChild(ele);
     },
     /** processes to initialize the container  */
     process: [

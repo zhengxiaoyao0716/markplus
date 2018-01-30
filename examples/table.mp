@@ -24,5 +24,5 @@
 - Those words have no effect |\2 Bob           |3.50
                     |\3                        #${Billing.slice(0, -1).reduce((s, i) => s + i)}
 \
-$_ window.completeFeatureExample = Object.keys(completeFeatureExample).map(k => `${k}: ${completeFeatureExample[k]}`).join('\n')
+$_ window.completeFeatureExample = Object.keys(this.completeFeatureExample).map(k => `${k}: ${this.completeFeatureExample[k]}`).join('\n')
 [EXPORT]($alert completeFeatureExample)
