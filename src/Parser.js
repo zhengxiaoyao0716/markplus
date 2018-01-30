@@ -223,9 +223,10 @@ export class Block extends Element {
             this.size = this.lines.length;
             return;
         }
-        this.lines.push(line);
         const mathced = line.match(Block.regex);
-        this.indents.push(mathced ? mathced[1].length : this.indents[this.indents.length - 1]);
+        const content = mathced ? mathced[1].length : this.indents[this.indents.length - 1];
+        this.indents.push(content);
+        this.lines.push(line);
     }
     completed(line: string, at: number) {
         if (line == '') {

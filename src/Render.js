@@ -36,6 +36,7 @@ const Markplus = {
     ],
     /** replace the sugars to it's raw syntax */
     htmlSugars: [
+        [/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1"></img>'],
         [/\[(.*?)\]\((.*?)\)/g, (...$) => `<a href="${(matched => matched ? `javascript:${matched[1]}(${matched[2]});` : $[2])($[2].match(/^\$(\w+)(.*)/))}">${$[1]}</a>`],
         [/`(.*?)`/g, '<code>$1</code>'],
     ],

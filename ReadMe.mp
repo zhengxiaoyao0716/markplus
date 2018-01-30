@@ -122,6 +122,7 @@ The codes above is equivalent to those:
 $lang/2
 ## `Markdown` 的加强 [English?](?lang=en)
 ## The strengthening of the `Markdown`. [中文版？](?lang=zh)
+[![GitHub](https://public.zheng0716.com/static/image/github.svg)](https://github.com/zhengxiaoyao0716/markplus)
 
 ===
 $lang/2
@@ -233,10 +234,10 @@ $Array.prototype.fill(new Array(3))/1
 ---
 
 $hitokoto/6 // since empty line could mark the end of `Block`, it would be used as an argument of `hitokoto/2`. so we should use `>` to mark the end.
-> 我的个性签名：
+> #### 我的个性签名：
 >> 爱冷剑，怜悲箫，月下狼孤啸；轻点画，慢勾描，云中人逍遥。
 >
-> 我的GitHub：
+> #### 我的GitHub：
 >> https://github.com/zhengxiaoyao0716
 >
 
