@@ -13,7 +13,14 @@ const CorePlugin = (self: Markplus, pkg: { version: string }) => {
         self.name = `${name[0].toUpperCase()}${name.slice(1)}`;
     }
     return {
-        head: () => `<!DOCTYPE html>\n<!-- Markplus: ${self.name} -->\n<meta charset="UTF-8">\n<title>${self.name}</title>\n<script>${polyfill}</script>`,
+        head: () => [
+            '<!DOCTYPE html>',
+            `<!-- Markplus: ${self.name} -->`,
+            '<meta charset="UTF-8">',
+            '<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, shrink-to-fit=no">',
+            `<title>${self.name}</title>`,
+            `<script>${polyfill}</script>`,
+        ].join('\n'),
         code: () => `${withEscape}\n${Render}export const version = '${pkg.version}';\n`,
         dump: () => `
             import * as Markplus from 'Markplus';

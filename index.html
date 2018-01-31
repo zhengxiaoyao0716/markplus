@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <!-- Markplus: MarkplusDocument -->
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, shrink-to-fit=no">
 <title>MarkplusDocument</title>
 <script>window.Promise || document.writeln('<script src="https://cdn.jsdelivr.net/npm/babel-polyfill@6.26.0/dist/polyfill.min.js"><' + '/script>');</script>
 
@@ -11,6 +12,9 @@
         font-family: arial,tahoma,'Microsoft Yahei','\5b8b\4f53',sans-serif;
         padding: 45px;
         line-height: 1.5;
+    }
+    @media screen and (max-width: 600px) {
+        .Markplus { padding: 15px; }
     }
     .Markplus .Target {
         display: block;
@@ -382,7 +386,7 @@
                 return document.createElement('span');
             }]],
             /** replace the sugars to it's raw syntax */
-            htmlSugars: [[/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1"></img>'], [/\[(.*?)\]\((.*?)\)/g, function () {
+            htmlSugars: [[/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1">'], [/\[(.*?)\]\((.*?)\)/g, function () {
                 for (var _len = arguments.length, $ = Array(_len), _key = 0; _key < _len; _key++) {
                     $[_key] = arguments[_key];
                 }

@@ -3,6 +3,9 @@
     padding: 45px;
     line-height: 1.5;
 }
+@media screen and (max-width: 600px) {
+    .Markplus { padding: 15px; }
+}
 .Markplus .Target {
     display: block;
 }
