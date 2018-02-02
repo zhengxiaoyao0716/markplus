@@ -42,8 +42,10 @@ const resolve = (text: Promise<string>) => text.then(Parser.parse.bind(Parser)).
 
 (url => {
     if (url) {
-        document.head.appendChild((base => (base.href = url, base))(document.createElement('base')));
-        resolve(fetch(url).then(r => r.text()));
+        resolve(fetch(url).then(r => {
+            document.head.appendChild((base => (base.href = url, base))(document.createElement('base')));
+            return r.text();
+        }));
         return;
     }
     const dropbox = document.createElement('div');

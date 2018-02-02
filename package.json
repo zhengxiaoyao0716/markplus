@@ -1,6 +1,6 @@
 {
   "name": "markplus",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "The strengthening of the `Markdown`.",
   "main": "index.js",
   "bin": {
