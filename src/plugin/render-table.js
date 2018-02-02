@@ -38,6 +38,13 @@ const RenderTable = () => ({
             calcAll(macro);
         };
         Markplus.decorators.push((ele, _, payload) => ele.classList.contains('Table') && render(ele, payload));
-    })();`.replace(/\n {4}/g, '\n'),
+    })();
+    export const exportJson = (data, name='markplus-table') => {
+        const blob = new Blob([JSON.stringify(data)], {type: "text/plain;charset=utf-8"});
+        const a = document.createElement('a');
+        a.download = \`\${name}.json\`;
+        a.href = URL.createObjectURL(blob);
+        a.click();
+    };`.replace(/\n {4}/g, '\n'),
 });
 export default RenderTable;

@@ -22,6 +22,10 @@ const Markplus = {
             },
         ],
         [
+            payload => payload instanceof HTMLElement,
+            payload => payload,
+        ],
+        [
             payload => payload instanceof Object && payload.tag,
             payload => {
                 const { tag, html, ...props } = payload;
@@ -37,7 +41,7 @@ const Markplus = {
     /** replace the sugars to it's raw syntax */
     htmlSugars: [
         [/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1">'],
-        [/\[(.*?)\]\((.*?)\)/g, (...$) => `<a href="${(matched => matched ? `javascript:${matched[1]}(${matched[2]});` : $[2])($[2].match(/^\$(\w+)(.*)/))}">${$[1]}</a>`],
+        [/\[(.*?)\]\((.*?)\)/g, (...$) => `<a href="${(matched => matched ? `javascript:${matched[1] == '_' ? 'void' : matched[1]}(${matched[2]});` : $[2])($[2].match(/^\$([\w.]+)(.*)/))}">${$[1]}</a>`],
         [/`(.*?)`/g, '<code>$1</code>'],
     ],
     /**
@@ -55,8 +59,8 @@ const Markplus = {
     },
     /** decorators for each element before they would be insert into container */
     decorators: [
-        (ele, at) => ele.setAttribute('data-markplus-at', at),
-        (ele, at) => ele.id || (ele.id = `L${at}`),
+        (ele, at) => at != null && ele.setAttribute('data-markplus-at', at),
+        (ele, at) => ele.id || at != null && (ele.id = `L${at}`),
         (ele, at, payload) => payload && payload.nested && payload.nested.forEach((payload, index) =>
             Markplus.register(ele.querySelector(`*[data-markplus-nested="${index}"]`), index, payload)),
     ],

@@ -151,7 +151,7 @@ export class Header extends Element {
             tag: 'span',
             html: `<span>${this.content}</span><br>`,
             class: `Header Header-${this.level}`,
-            'data-markplus-header-level': this.level,
+            'data-markplus-header-level': `${this.level}`,
             id: this.id,
         };
     }
@@ -164,7 +164,7 @@ export class Code extends Element {
         this.language = language || '';
     }
     get code() { return (this.symbol ? this.lines.slice(1, this.size - 1) : this.lines.map(line => line.slice(4))).join('\n'); }
-    get json() { return { tag: 'pre', html: this.code, class: `Code Code-${this.language}` }; }
+    get json() { return { tag: 'pre', html: this.code, class: `Code Code-${this.language}`, 'data-markplus-code-language': this.language }; }
     push(line: string, at: number) { // eslint-disable-line no-unused-vars
         this.lines.push(line);
         if (line == this.symbol) {
@@ -549,7 +549,8 @@ const Parser = {
     pipe(line: string, at: number): Element {
         return this.Function.pipe(line, at) || this.HTMLElement.pipe(line, at) || new Invalid(line, at, 'Unknown syantax.');
     },
-    parse(lines: [string]) {
+    parse(content: string | [string]) {
+        const lines = content instanceof Array ? content : content.split(/\r?\n/);
         const elements = [new Comments('https://github.com/zhengxiaoyao0716/markplus', 0)];
         lines.forEach((line, index) => {
             const at = 1 + index;

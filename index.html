@@ -246,7 +246,9 @@
     .Markplus.full>:not(.Code-full) {
         display: none;
     }
-    .Markplus .Code{background:#1E1E1E;}.Markplus .Code #full{color:#eee;}/* https://highlightjs.org/static/demo/styles/vs2015.css */.hljs{background:#1E1E1E;color:#DCDCDC}.hljs-keyword,.hljs-literal,.hljs-symbol,.hljs-name{color:#569CD6}.hljs-link{color:#569CD6;text-decoration:underline}.hljs-built_in,.hljs-type{color:#4EC9B0}.hljs-number,.hljs-class{color:#B8D7A3}.hljs-string,.hljs-meta-string{color:#D69D85}.hljs-regexp,.hljs-template-tag{color:#9A5334}.hljs-subst,.hljs-function,.hljs-title,.hljs-params,.hljs-formula{color:#DCDCDC}.hljs-comment,.hljs-quote{color:#57A64A;font-style:italic}.hljs-doctag{color:#608B4E}.hljs-meta,.hljs-meta-keyword,.hljs-tag{color:#9B9B9B}.hljs-variable,.hljs-template-variable{color:#BD63C5}.hljs-attr,.hljs-attribute,.hljs-builtin-name{color:#9CDCFE}.hljs-section{color:gold}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}.hljs-bullet,.hljs-selector-tag,.hljs-selector-id,.hljs-selector-class,.hljs-selector-attr,.hljs-selector-pseudo{color:#D7BA7D}.hljs-addition{background-color:#144212;display:inline-block;width:100%}.hljs-deletion{background-color:#600;display:inline-block;width:100%}</style>
+    .Markplus .Code{background:#1E1E1E;}.Markplus .Code #full{color:#eee;}/* https://highlightjs.org/static/demo/styles/vs2015.css */.hljs{background:#1E1E1E;color:#DCDCDC}.hljs-keyword,.hljs-literal,.hljs-symbol,.hljs-name{color:#569CD6}.hljs-link{color:#569CD6;text-decoration:underline}.hljs-built_in,.hljs-type{color:#4EC9B0}.hljs-number,.hljs-class{color:#B8D7A3}.hljs-string,.hljs-meta-string{color:#D69D85}.hljs-regexp,.hljs-template-tag{color:#9A5334}.hljs-subst,.hljs-function,.hljs-title,.hljs-params,.hljs-formula{color:#DCDCDC}.hljs-comment,.hljs-quote{color:#57A64A;font-style:italic}.hljs-doctag{color:#608B4E}.hljs-meta,.hljs-meta-keyword,.hljs-tag{color:#9B9B9B}.hljs-variable,.hljs-template-variable{color:#BD63C5}.hljs-attr,.hljs-attribute,.hljs-builtin-name{color:#9CDCFE}.hljs-section{color:gold}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}.hljs-bullet,.hljs-selector-tag,.hljs-selector-id,.hljs-selector-class,.hljs-selector-attr,.hljs-selector-pseudo{color:#D7BA7D}.hljs-addition{background-color:#144212;display:inline-block;width:100%}.hljs-deletion{background-color:#600;display:inline-block;width:100%}
+</style>
+
 <style>body { margin: 0; width: 100%; height: 100%; }</style>
 
 <script>
@@ -367,6 +369,10 @@
                 ele.classList.add('Array');
                 return ele;
             }], [function (payload) {
+                return payload instanceof HTMLElement;
+            }, function (payload) {
+                return payload;
+            }], [function (payload) {
                 return payload instanceof Object && payload.tag;
             }, function (payload) {
                 var tag = payload.tag,
@@ -392,8 +398,8 @@
                 }
 
                 return '<a href="' + function (matched) {
-                    return matched ? 'javascript:' + matched[1] + '(' + matched[2] + ');' : $[2];
-                }($[2].match(/^\$(\w+)(.*)/)) + '">' + $[1] + '</a>';
+                    return matched ? 'javascript:' + (matched[1] == '_' ? 'void' : matched[1]) + '(' + matched[2] + ');' : $[2];
+                }($[2].match(/^\$([\w.]+)(.*)/)) + '">' + $[1] + '</a>';
             }], [/`(.*?)`/g, '<code>$1</code>']],
             replaceHtml: function replaceHtml(ele, html) {
                 var _this = this;
@@ -414,9 +420,9 @@
 
             /** decorators for each element before they would be insert into container */
             decorators: [function (ele, at) {
-                return ele.setAttribute('data-markplus-at', at);
+                return at != null && ele.setAttribute('data-markplus-at', at);
             }, function (ele, at) {
-                return ele.id || (ele.id = 'L' + at);
+                return ele.id || at != null && (ele.id = 'L' + at);
             }, function (ele, at, payload) {
                 return payload && payload.nested && payload.nested.forEach(function (payload, index) {
                     return Markplus.register(ele.querySelector('*[data-markplus-nested="' + index + '"]'), index, payload);
@@ -457,7 +463,7 @@
             Object.defineProperty(Markplus, 'container', containerProperty);
         };
 
-        var version = exports.version = '0.3.7';
+        var version = exports.version = '0.4.0';
 
         Markplus.renders.unshift([function (payload) {
             return payload instanceof Promise;
@@ -465,7 +471,7 @@
             var ele = document.createElement('span');
             ele.classList.add('Promise');
             payload.then(function (r) {
-                return Markplus.replaceHtml(ele, r + '<br>');
+                return Markplus.register(ele, payload.at, r);
             });
             return ele;
         }]);
@@ -532,6 +538,15 @@
                 return ele.classList.contains('Table') && render(ele, payload);
             });
         })();
+        var exportJson = exports.exportJson = function exportJson(data) {
+            var name = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'markplus-table';
+
+            var blob = new Blob([JSON.stringify(data)], { type: "text/plain;charset=utf-8" });
+            var a = document.createElement('a');
+            a.download = name + '.json';
+            a.href = URL.createObjectURL(blob);
+            a.click();
+        };
 
         Markplus.decorators.push(function (ele, _, payload) {
             return ele.classList.contains('Header') && (ele.innerHTML = '<span class="hash"></span>' + ele.innerHTML, ele.querySelector('.hash').addEventListener('click', function () {
@@ -646,6 +661,17 @@
             var container = document.createElement('div');
             container.classList.add('Code-full');
 
+            var preRender = function preRender(ele, payload) {
+                if (typeof hljs === 'undefined') {
+                    console.error('\'markplus-plugin-render-highlight\' failed to render code for \'highlightjs\' not found.');
+                    return false;
+                }
+                var renderedLang = hljs.highlightAuto(ele.innerHTML, [payload['data-markplus-code-language']]);
+                var rendered = renderedLang.language ? renderedLang : hljs.highlightAuto(ele.innerHTML);
+                ele.innerHTML = '<span id="full">\u25E4</span><span class="hljs ' + rendered.language + '">' + rendered.value + '</span>';
+                return true;
+            };
+
             var highlight = function highlight(ele) {
                 return ele.querySelector('#full').addEventListener('click', function () {
                     var full = document.createElement('pre');
@@ -660,7 +686,6 @@
                     });
                     full.querySelector('#full').addEventListener('click', function () {
                         mpContainer.classList.remove('full');
-                        console.log(mpContainer.classList);
                         container.parentElement.removeChild(container);
                         ele.innerHTML = full.innerHTML;
                         container.innerHTML = '';
@@ -676,257 +701,285 @@
                     location.hash = full.id;
                 });
             };
-            Markplus.decorators.push(function (ele, _, payload) {
-                return ele.classList.contains('Code') && highlight(ele);
+            Markplus.decorators.push(function (ele, _at, payload) {
+                return ele.classList.contains('Code') && (payload.hljs || preRender(ele, payload)) && highlight(ele);
             });
         });
-    });
-</script>
+    });</script>
 
-<script>
-    (function (global, factory) {
-        if (typeof define === "function" && define.amd) {
-            define(["exports", "Markplus"], factory);
-        } else if (typeof exports !== "undefined") {
-            factory(exports, require("Markplus"));
-        } else {
-            var mod = {
-                exports: {}
-            };
-            factory(mod.exports, global.Markplus);
-            global.MarkplusDocument = mod.exports;
-        }
-    })(this, function (exports, _Markplus) {
-        "use strict";
-
-        Object.defineProperty(exports, "__esModule", {
-            value: true
-        });
-
-        var Markplus = _interopRequireWildcard(_Markplus);
-
-        function _interopRequireWildcard(obj) {
-            if (obj && obj.__esModule) {
-                return obj;
+<div id="markplusMarkplusDocument">
+    <script>
+        (function (global, factory) {
+            if (typeof define === "function" && define.amd) {
+                define(["exports", "Markplus"], factory);
+            } else if (typeof exports !== "undefined") {
+                factory(exports, require("Markplus"));
             } else {
-                var newObj = {};
-
-                if (obj != null) {
-                    for (var key in obj) {
-                        if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key];
-                    }
-                }
-
-                newObj.default = obj;
-                return newObj;
+                var mod = {
+                    exports: {}
+                };
+                factory(mod.exports, global.Markplus);
+                global.MarkplusDocument = mod.exports;
             }
-        }
+        })(this, function (exports, _Markplus) {
+            "use strict";
 
-        var _extends = Object.assign || function (target) {
-            for (var i = 1; i < arguments.length; i++) {
-                var source = arguments[i];
+            Object.defineProperty(exports, "__esModule", {
+                value: true
+            });
 
-                for (var key in source) {
-                    if (Object.prototype.hasOwnProperty.call(source, key)) {
-                        target[key] = source[key];
-                    }
-                }
-            }
+            var Markplus = _interopRequireWildcard(_Markplus);
 
-            return target;
-        };
+            function _interopRequireWildcard(obj) {
+                if (obj && obj.__esModule) {
+                    return obj;
+                } else {
+                    var newObj = {};
 
-        function _classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) {
-                throw new TypeError("Cannot call a class as a function");
-            }
-        }
-
-        var _createClass = function () {
-            function defineProperties(target, props) {
-                for (var i = 0; i < props.length; i++) {
-                    var descriptor = props[i];
-                    descriptor.enumerable = descriptor.enumerable || false;
-                    descriptor.configurable = true;
-                    if ("value" in descriptor) descriptor.writable = true;
-                    Object.defineProperty(target, descriptor.key, descriptor);
-                }
-            }
-
-            return function (Constructor, protoProps, staticProps) {
-                if (protoProps) defineProperties(Constructor.prototype, protoProps);
-                if (staticProps) defineProperties(Constructor, staticProps);
-                return Constructor;
-            };
-        }();
-
-        function _objectWithoutProperties(obj, keys) {
-            var target = {};
-
-            for (var i in obj) {
-                if (keys.indexOf(i) >= 0) continue;
-                if (!Object.prototype.hasOwnProperty.call(obj, i)) continue;
-                target[i] = obj[i];
-            }
-
-            return target;
-        }
-
-        var render = Markplus.default,
-            extra = _objectWithoutProperties(Markplus, ["default"]);
-
-        var MarkplusDocument = function () {
-            function MarkplusDocument(container) {
-                var _this = this;
-
-                _classCallCheck(this, MarkplusDocument);
-
-                render(container, function (ctx) {
-                    return _this.render(_extends({}, ctx, extra));
-                });
-            }
-
-            _createClass(MarkplusDocument, [{
-                key: "render",
-                value: function render(Markplus) {
-                    Markplus.register(0, { "tag": "span", "html": "<!-- https://github.com/zhengxiaoyao0716/markplus -->", "class": "Comments" });
-                    Markplus.register(1, console.log('Markplus:', '{\n' // `$IDENT ...args` used to call the ident function with args
-                    ));
-                    Markplus.register(2, console.log("    Home: 'https://github.com/zhengxiaoyao0716/markplus'," /* `/N` will be replaced by next N lines after. */, '\n'));
-                    Markplus.register(4, console.log('    Author:' // the execution result would be used instead of convert to string.
-                    , "'github.com/zhengxiaoyao0716',", '\n' // if `/N` followed `IDENT` directly without white-space,
-                    ));
-                    Markplus.register(7, void ("======== ======== ======== ======== ======== ======== ======== ========         // not equals to `$_/N` (without white-space), the latter will execute the codes.", "(^_^) Those block only visible in source to make things looks tidiness.", "======== ======== ======== ======== ======== ======== ======== ========", "" // equals to `$void /4`, nothing would execute but next N lines was gone.
-                    ));
-                    var hitokoto = this.hitokoto = function () {
-                        for (var _len = arguments.length, words = Array(_len), _key = 0; _key < _len; _key++) {
-                            words[_key] = arguments[_key];
+                    if (obj != null) {
+                        for (var key in obj) {
+                            if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key];
                         }
+                    }
 
-                        return [].concat(words)[parseInt(Math.random() * words.length)] // `#IDENT(...args) ...results` used to define a function, `()` can be omitted if no arguments.
-                        ;
-                    };
-                    var _lang = function _lang() {
-                        var _arguments = arguments;
-
-                        var result = void 0;
-                        result = function () {
-                            return location.search.match(/lang=(\w+)/) // `()` was omitted, for no arguments needed.
-                            ;
-                        }(result);
-                        result = function (match) {
-                            return console.log(match), ['zh', 'en', 'jp'].indexOf(match && match[1]) // although `...results` allowed, only the last result will return.
-                            ;
-                        }(result);
-                        result = function (index) {
-                            return _arguments[index == -1 ? 0 : index] || _arguments[0];
-                        }(result);
-                        return result // you could use `#IDENT(...args) /N` to define a function composed by mutli-line functions.
-                        ;
-                    };
-                    var lang = this.lang = function () {
-                        var result = void 0;
-                        result = function () {
-                            return location.search.match(/lang=(\w+)/) // the function defined below would be executed immediately.
-                            ;
-                        }(result);
-                        result = function (match) {
-                            return ['zh', 'en', 'jp'].indexOf(match && match[1]);
-                        }(result);
-                        result = function (index) {
-                            return function () {
-                                for (var _len2 = arguments.length, lines = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-                                    lines[_key2] = arguments[_key2];
-                                }
-
-                                return lines[index == -1 ? 0 : index] || lines[0];
-                            } // the last return is a function, and this would be assigned to the `IDENT`.
-                            ;
-                        }(result);
-                        return result // `/N` followed `IDENT` directly without white-space,
-                        ;
-                    }();
-                    var version = this.version = function () {
-                        return Markplus.version // `#IDENT/value` means `#IDENT/0 value`, you can use this to define constant.
-                        ;
-                    }();
-                    Markplus.register(22, console.log.bind(console, '    version:')("'" + version + "',\n", // for `/N` followed `$IDENT(...args)` directly, 'v0.0.1' was used, instead of 'version'.
-                    '}\n' // `$IDENT(this, ...thisArgs) ...args` equals to `$IDENT.bind(this, ...thisArgs)(...Args)`.
-                    ));
-                    Markplus.register(24, void 'equals to `$_/0 ...`' // notice that the `...args` will be execute for `/N` followed `IDENT` directly without white-space.
-                    );
-                    Markplus.register(25, void ("The codes above is equivalent to those:", "``` javascript", "    // L1", "    console.log(", "        'Markplus:', '{\\n'                                                 // `$IDENT ...args` used to call the ident function with args", "    );", "    // L2", "    console.log(", "        \"    Home: 'https://github.com/zhengxiaoyao0716/markplus',\" /* `/N` will be replaced by next N lines after. */, '\\n'", "    );", "    // L4", "    _L5 = (", "        '    Author:'                                                               // the execution result would be used instead of convert to string.", "    )", "    _L6 = (", "        \"'github.com/zhengxiaoyao0716',\"", "    )", "    console.log(", "        _L5,", "        _L6, '\\n'                                                            // if `/N` followed `IDENT` directly without white-space,", "    );", "    // L7", "    void(", "        \"======== ======== ======== ======== ======== ======== ======== ========         // not equals to `$_/N` (without white-space), the latter will execute the codes.\",", "        \"(^_^) Those block only visible in source to make things looks tidiness.\",", "        \"======== ======== ======== ======== ======== ======== ======== ========\",", "        \"\"                                                                           // equals to `$void /4`, nothing would execute but next N lines was gone.", "    );", "", "    // L12", "    const hitokoto = function (", "        ...words", "    ) { return (", "        [...words][parseInt(Math.random() * words.length)]          // `#IDENT(...args) ...results` used to define a function, `()` can be omitted if no arguments.", "    ); };", "    // L13", "    const lang = function () {", "        let result;", "        result = (() => (", "            location.search.match(/lang=(\\w+)/)                                         // `()` was omitted, for no arguments needed.", "        ))(result);", "        result = ((match) => (", "            console.log(match), ['zh', 'en', 'jp'].indexOf(match && match[1])   // although `...results` allowed, only the last result will return.", "        ))(result);", "        result = ((index) => (", "            arguments[index == -1 ? 0 : index] || arguments[0]", "        ))(result);", "        return (", "            result                                                                       // you could use `#IDENT(...args) /N` to define a function composed by mutli-line functions.", "        );", "    };", "    // L17", "    _lang = function () {", "        let result;", "        result = (() => (", "            location.search.match(/lang=(\\w+)/)                                         // the function defined below would be executed immediately.", "        ))(result);", "        result = ((match) => (", "            ['zh', 'en', 'jp'].indexOf(match && match[1])", "        ))(result);", "        result = ((index) => (", "            (...lines) => lines[index == -1 ? 0 : index] || lines[0]            // the last return is a function, and this would be assigned to the `IDENT`.", "        ))(result);", "        return (", "            result                                                                         // `/N` followed `IDENT` directly without parentheses-params and white-space", "        );", "    };", "    const lang = _lang();", "    // L21", "    _version = function () { return (", "        'v0.0.1'                                                               // `#IDENT/value` means `#IDENT/0 value`, you can use this to define constant.", "    ); };", "    const version = _version();", "    // L22", "    _L23 = (", "        `'${version}',\\n`                                                           // for `/N` followed `$IDENT(...args)` directly, 'v0.0.1' was used, instead of 'version'.", "    );", "    console.log.bind(console, '    version:')(", "        _L23, '}\\n'                                  // `$IDENT(this, ...thisArgs) ...args` equals to `$IDENT.bind(this, ...thisArgs)(...Args)`.", "    );", "    // 24", "    void(", "        'equals to `$_/0 ...`'                                                       // notice that the `...args` will be execute for `/N` followed `IDENT` directly without white-space.", "    );", "    // L25", "    void(", "        \",,,\"                                                                        // `/:n` = `/N` , N = n - 25", "    )", "```", "", "", "", "", "", "" // `/:n` = `/N` , N = n - 25
-                    ));
-                    Markplus.register(121, { "tag": "span", "html": "<span>Markplus (document)</span><br>", "class": "Header Header-1", "data-markplus-header-level": 1, "id": "markplusDocument" });
-                    Markplus.register(122, lang({ "tag": "span", "html": "<span>`Markdown` 的加强 [English?](?lang=en)</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2, "id": "markdownEnglishLangEn", "at": 123 }, { "tag": "span", "html": "<span>The strengthening of the `Markdown`. [中文版？](?lang=zh)</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2, "id": "theStrengtheningOfTheMarkdownLangZh", "at": 124 }));
-                    Markplus.register(125, { "tag": "span", "html": "[![GitHub](https://public.zheng0716.com/static/image/github.svg)](https://github.com/zhengxiaoyao0716/markplus)<br>", "class": "Plain" });
-                    Markplus.register(126, { "tag": "span", "html": "<br>", "class": "Plain" });
-                    Markplus.register(127, { "tag": "span", "html": "<br>", "class": "Divider Divider-bold" });
-                    Markplus.register(128, lang({ "tag": "span", "html": "<span>用法</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2, "id": "用法", "at": 129 }, { "tag": "span", "html": "<span>Usage</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2, "id": "usage", "at": 130 }));
-                    Markplus.register(131, { "tag": "pre", "html": "<span id=\"full\">◤</span><span class=\"hljs armasm\"><span class=\"hljs-symbol\">npm</span> i --save-dev <span class=\"hljs-keyword\">markplus\n</span>./node_modules/.<span class=\"hljs-keyword\">bin/markplus </span>-h</span>", "class": "Code Code-bash" });
-                    Markplus.register(135, { "tag": "span", "html": "<br>", "class": "Plain" });
-                    Markplus.register(136, { "tag": "span", "html": "<br>", "class": "Divider Divider-bold" });
-                    Markplus.register(137, lang({ "tag": "span", "html": "<span>插件</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2, "id": "插件", "at": 138 }, { "tag": "span", "html": "<span>Plugin</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2, "id": "plugin", "at": 139 }));
-                    Markplus.register(140, { "tag": "span", "html": "<span>Via `.markplusrc`, `markplusrc.json`:</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "viaMarkplusrcMarkplusrcJson" });
-                    Markplus.register(141, { "tag": "pre", "html": "<span id=\"full\">◤</span><span class=\"hljs json\">{ <span class=\"hljs-attr\">\"plugin\"</span>: [<span class=\"hljs-string\">\"PLUGIN_NAME\"</span>] }</span>", "class": "Code Code-json" });
-                    Markplus.register(144, { "tag": "span", "html": "<br>", "class": "Plain" });
-                    Markplus.register(145, { "tag": "span", "html": "<span>Via `markplus.config.js`:</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "viaMarkplusConfigJs" });
-                    Markplus.register(146, { "tag": "pre", "html": "<span id=\"full\">◤</span><span class=\"hljs coffeescript\">exports.<span class=\"hljs-keyword\">default</span> = { plugin: [<span class=\"hljs-built_in\">require</span>(<span class=\"hljs-string\">'./MARKPLUS_PLUGIN_MODULE'</span>).<span class=\"hljs-keyword\">default</span>] };</span>", "class": "Code Code-nodejs" });
-                    Markplus.register(149, { "tag": "span", "html": "<br>", "class": "Plain" });
-                    Markplus.register(150, { "tag": "span", "html": "<span>Via `.*rc`, `*.json`, `*.config.js`:</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "viaRcJsonConfigJs" });
-                    Markplus.register(151, lang({ "tag": "span", "html": "通过 `markplus -c <config.js> ...` 来加载它.<br>", "class": "Plain", "at": 152 }, { "tag": "span", "html": "Use `markplus -c <config.js> ...` to load it.<br>", "class": "Plain", "at": 153 }));
-                    Markplus.register(154, { "tag": "span", "html": "<br>", "class": "Plain" });
-                    Markplus.register(155, lang({ "tag": "span", "html": "<span>带参数的配置:</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "带参数的配置", "at": 156 }, { "tag": "span", "html": "<span>Config with arguments:</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "configWithArguments", "at": 157 }));
-                    Markplus.register(158, { "tag": "pre", "html": "<span id=\"full\">◤</span><span class=\"hljs javascript\"><span class=\"hljs-keyword\">const</span> config = {\n    <span class=\"hljs-attr\">plugin</span>: [\n        [<span class=\"hljs-string\">\"PLUGIN_NAME\"</span> || <span class=\"hljs-built_in\">require</span>(<span class=\"hljs-string\">'PLUGIN_MODULE'</span>), ...PLUGIN_ARGS]\n    ]\n};</span>", "class": "Code Code-javascript" });
-                    Markplus.register(165, { "tag": "span", "html": "<br>", "class": "Plain" });
-                    Markplus.register(166, { "tag": "span", "html": "<br>", "class": "Plain" });
-                    Markplus.register(167, { "tag": "span", "html": "<br>", "class": "Divider Divider-bold" });
-                    Markplus.register(168, lang(Array({ "tag": "span", "html": "<span>基础目标</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2, "id": "基础目标", "at": 170 }, { "tag": "span", "html": "<span>更完善的工具链</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "更完善的工具链", "at": 171 }, { "tag": "span", "html": "易用，易扩展<br>", "class": "Plain", "at": 172 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 173 }, { "tag": "span", "html": "<span>加强表格</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "加强表格", "at": 174 }, { "tag": "span", "html": "混合单元格，宏计算 [examples/table.mp](./examples/table.html)<br>", "class": "Plain", "at": 175 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 176 }, { "tag": "span", "html": "<span>更清晰的语义</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "更清晰的语义", "at": 177 }, { "tag": "span", "html": "何时换行，何时滚动<br>", "class": "Plain", "at": 178 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 179 }, { "tag": "span", "html": "<span>动态交互</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "动态交互", "at": 180 }, { "tag": "span", "html": "可选、可配置并且安全的动态演出<br>", "class": "Plain", "at": 181 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 182 }, { "tag": "span", "html": "<span>合理的结构</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "合理的结构", "at": 183 }, { "tag": "span", "html": "可复用，可继承<br>", "class": "Plain", "at": 184 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 185 }, { "tag": "span", "html": "<span>使用灵活</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "使用灵活", "at": 186 }, { "tag": "span", "html": "预编译、运行时渲染<br>", "class": "Plain", "at": 187 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 188 }, { "tag": "span", "html": "<span>但是，一切的前提是：保持简单</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "但是，一切的前提是：保持简单", "at": 189 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 190 }, void ("", "", "", "", "", "", "" // since the parent `$lang/60` only accept 60 lines, this would not closed. but it useful in this case that we only want to hide the redundant lines.
-                    )), Array({ "tag": "span", "html": "<span>Base goal</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2, "id": "baseGoal", "at": 200 }, { "tag": "span", "html": "<span>More perfect tool chain.</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "morePerfectToolChain", "at": 201 }, { "tag": "span", "html": "Easy to embedded, Convenient extension.<br>", "class": "Plain", "at": 202 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 203 }, { "tag": "span", "html": "<span>Strengthing for `Table` .</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "strengthingForTable", "at": 204 }, { "tag": "span", "html": "Multi-unit-grid, Macro calculate. [examples/table.mp](./exmaples/table.html)<br>", "class": "Plain", "at": 205 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 206 }, { "tag": "span", "html": "<span>Clearer semantics.</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "clearerSemantics", "at": 207 }, { "tag": "span", "html": "When to break line, When to scroll.<br>", "class": "Plain", "at": 208 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 209 }, { "tag": "span", "html": "<span>Dynamic interactivity.</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "dynamicInteractivity", "at": 210 }, { "tag": "span", "html": "Optional\\ configurable and safety dynamic perform.<br>", "class": "Plain", "at": 211 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 212 }, { "tag": "span", "html": "<span>Reasonable structure.</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "reasonableStructure", "at": 213 }, { "tag": "span", "html": "Reusable, Inheritable.<br>", "class": "Plain", "at": 214 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 215 }, { "tag": "span", "html": "<span>Flexible usage.</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "flexibleUsage", "at": 216 }, { "tag": "span", "html": "Precompiled\\ Runtime-render.<br>", "class": "Plain", "at": 217 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 218 }, { "tag": "span", "html": "<span>But, All the premises: Keep Simple.</span><br>", "class": "Header Header-3", "data-markplus-header-level": 3, "id": "butAllThePremisesKeepSimple", "at": 219 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 220 }, void ("", "", "", "", "", "", ""))));
-                    Markplus.register(229, Array.prototype.fill.bind(new Array(3))({ "tag": "span", "html": "<br>", "class": "Divider Divider-solid", "at": 230 }));
-                    Markplus.register(231, { "tag": "span", "html": "<br>", "class": "Plain" });
-                    Markplus.register(232, hitokoto({ tag: 'span', html: '<span data-markplus-nested="0"></span><span class="Block Block-nested"><span data-markplus-nested="1"></span></span>', class: 'Block', nested: [{ "tag": "span", "html": "<span>我的个性签名：</span><br>", "class": "Header Header-4", "data-markplus-header-level": 4, "id": "我的个性签名：" }, { "tag": "span", "html": "爱冷剑，怜悲箫，月下狼孤啸；轻点画，慢勾描，云中人逍遥。<br>", "class": "Plain" }] }, { tag: 'span', html: '<span data-markplus-nested="0"></span><span class="Block Block-nested"><span data-markplus-nested="1"></span></span>', class: 'Block', nested: [{ "tag": "span", "html": "<span>我的GitHub：</span><br>", "class": "Header Header-4", "data-markplus-header-level": 4, "id": "gitHub" }, { "tag": "span", "html": "https://github.com/zhengxiaoyao0716<br>", "class": "Plain" }] // since empty line could mark the end of `Block`, it would be used as an argument of `hitokoto/2`. so we should use `>` to mark the end.
-                    }));
-                    Markplus.register(239, { "tag": "span", "html": "<br>", "class": "Plain" });
-                    Markplus.register(240, { "tag": "span", "html": "<br>", "class": "Divider Divider-dashed" });
-                    var remoteHitokoto = this.remoteHitokoto = function (url) {
-                        var result = void 0;
-                        result = function () {
-                            return 'a'.charCodeAt(0) + parseInt(Math.random() * 4);
-                        }(result);
-                        result = function (charCode) {
-                            return String.fromCharCode(charCode);
-                        }(result);
-                        result = function (type) {
-                            return url + "?c=" + type;
-                        }(result);
-                        result = function (url) {
-                            return fetch(url).then(function (r) {
-                                return r.json();
-                            }).then(function (_ref) {
-                                var hitokoto = _ref.hitokoto,
-                                    from = _ref.from;
-                                return hitokoto + " --from: " + from;
-                            });
-                        }(result);
-                        return result.then(function (content) {
-                            return "<span class=\"Block\">" + content + "</span>";
-                        });
-                    };
-                    Markplus.register(246, lang({ "tag": "span", "html": "<span>每日一言</span><br>", "class": "Header Header-4", "data-markplus-header-level": 4, "id": "每日一言", "at": 247 }, { "tag": "span", "html": "<span>Daily words</span><br>", "class": "Header Header-4", "data-markplus-header-level": 4, "id": "dailyWords", "at": 248 }, { "tag": "span", "html": "<span>ひとこと</span><br>", "class": "Header Header-4", "data-markplus-header-level": 4, "id": "ひとこと", "at": 249 }));
-                    Markplus.register(250, remoteHitokoto('https://sslapi.hitokoto.cn/'));
-                    Markplus.register(251, { "tag": "span", "html": "<br>", "class": "Plain" });
+                    newObj.default = obj;
+                    return newObj;
                 }
-            }]);
+            }
 
-            return MarkplusDocument;
-        }();
+            var _extends = Object.assign || function (target) {
+                for (var i = 1; i < arguments.length; i++) {
+                    var source = arguments[i];
 
-        exports.default = MarkplusDocument;
-    });
-</script>
+                    for (var key in source) {
+                        if (Object.prototype.hasOwnProperty.call(source, key)) {
+                            target[key] = source[key];
+                        }
+                    }
+                }
 
-<div id="markplusMarkplusDocument"></div>
+                return target;
+            };
 
-<script>new MarkplusDocument.default(document.querySelector('#markplusMarkplusDocument'));</script>
+            function _classCallCheck(instance, Constructor) {
+                if (!(instance instanceof Constructor)) {
+                    throw new TypeError("Cannot call a class as a function");
+                }
+            }
 
+            var _createClass = function () {
+                function defineProperties(target, props) {
+                    for (var i = 0; i < props.length; i++) {
+                        var descriptor = props[i];
+                        descriptor.enumerable = descriptor.enumerable || false;
+                        descriptor.configurable = true;
+                        if ("value" in descriptor) descriptor.writable = true;
+                        Object.defineProperty(target, descriptor.key, descriptor);
+                    }
+                }
+
+                return function (Constructor, protoProps, staticProps) {
+                    if (protoProps) defineProperties(Constructor.prototype, protoProps);
+                    if (staticProps) defineProperties(Constructor, staticProps);
+                    return Constructor;
+                };
+            }();
+
+            function _objectWithoutProperties(obj, keys) {
+                var target = {};
+
+                for (var i in obj) {
+                    if (keys.indexOf(i) >= 0) continue;
+                    if (!Object.prototype.hasOwnProperty.call(obj, i)) continue;
+                    target[i] = obj[i];
+                }
+
+                return target;
+            }
+
+            var render = Markplus.default,
+                extra = _objectWithoutProperties(Markplus, ["default"]);
+
+            var _class = function () {
+                function _class(container) {
+                    var _this = this;
+
+                    _classCallCheck(this, _class);
+
+                    render(container, function (ctx) {
+                        return _this.render(_extends({}, ctx, extra));
+                    });
+                }
+
+                _createClass(_class, [{
+                    key: "render",
+                    value: function render(Markplus) {
+                        Markplus.register(0, { "tag": "span", "html": "<!-- https://github.com/zhengxiaoyao0716/markplus -->", "class": "Comments" });
+                        Markplus.register(1, console.log('Markplus:', '{\n' // `$IDENT ...args` used to call the ident function with args
+                        ));
+                        Markplus.register(2, console.log("    Home: 'https://github.com/zhengxiaoyao0716/markplus'," /* `/N` will be replaced by next N lines after. */, '\n'));
+                        Markplus.register(4, console.log('    Author:' // the execution result would be used instead of convert to string.
+                        , "'github.com/zhengxiaoyao0716',", '\n' // if `/N` followed `IDENT` directly without white-space,
+                        ));
+                        Markplus.register(7, void ("======== ======== ======== ======== ======== ======== ======== ========         // not equals to `$_/N` (without white-space), the latter will execute the codes.", "(^_^) Those block only visible in source to make things looks tidiness.", "======== ======== ======== ======== ======== ======== ======== ========", "" // equals to `$void /4`, nothing would execute but next N lines was gone.
+                        ));
+                        var hitokoto = this.hitokoto = function () {
+                            for (var _len = arguments.length, words = Array(_len), _key = 0; _key < _len; _key++) {
+                                words[_key] = arguments[_key];
+                            }
+
+                            return [].concat(words)[parseInt(Math.random() * words.length)] // `#IDENT(...args) ...results` used to define a function, `()` can be omitted if no arguments.
+                            ;
+                        };
+                        var _lang = function _lang() {
+                            var _arguments = arguments;
+
+                            var result = void 0;
+                            result = function () {
+                                return location.search.match(/lang=(\w+)/) // `()` was omitted, for no arguments needed.
+                                ;
+                            }(result);
+                            result = function (match) {
+                                return console.log(match), ['zh', 'en', 'jp'].indexOf(match && match[1]) // although `...results` allowed, only the last result will return.
+                                ;
+                            }(result);
+                            result = function (index) {
+                                return _arguments[index == -1 ? 0 : index] || _arguments[0];
+                            }(result);
+                            return result // you could use `#IDENT(...args) /N` to define a function composed by mutli-line functions.
+                            ;
+                        };
+                        var lang = this.lang = function () {
+                            var result = void 0;
+                            result = function () {
+                                return location.search.match(/lang=(\w+)/) // the function defined below would be executed immediately.
+                                ;
+                            }(result);
+                            result = function (match) {
+                                return ['zh', 'en', 'jp'].indexOf(match && match[1]);
+                            }(result);
+                            result = function (index) {
+                                return function () {
+                                    for (var _len2 = arguments.length, lines = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                                        lines[_key2] = arguments[_key2];
+                                    }
+
+                                    return lines[index == -1 ? 0 : index] || lines[0];
+                                } // the last return is a function, and this would be assigned to the `IDENT`.
+                                ;
+                            }(result);
+                            return result // `/N` followed `IDENT` directly without white-space,
+                            ;
+                        }();
+                        var version = this.version = function () {
+                            return Markplus.version // `#IDENT/value` means `#IDENT/0 value`, you can use this to define constant.
+                            ;
+                        }();
+                        Markplus.register(22, console.log.bind(console, '    version:')("'" + version + "',\n", // for `/N` followed `$IDENT(...args)` directly, 'v0.0.1' was used, instead of 'version'.
+                        '}\n' // `$IDENT(this, ...thisArgs) ...args` equals to `$IDENT.bind(this, ...thisArgs)(...Args)`.
+                        ));
+                        Markplus.register(24, void 'equals to `$_/0 ...`' // notice that the `...args` will be execute for `/N` followed `IDENT` directly without white-space.
+                        );
+                        Markplus.register(25, void ("The codes above is equivalent to those:", "``` javascript", "    // L1", "    console.log(", "        'Markplus:', '{\\n'                                                 // `$IDENT ...args` used to call the ident function with args", "    );", "    // L2", "    console.log(", "        \"    Home: 'https://github.com/zhengxiaoyao0716/markplus',\" /* `/N` will be replaced by next N lines after. */, '\\n'", "    );", "    // L4", "    _L5 = (", "        '    Author:'                                                               // the execution result would be used instead of convert to string.", "    )", "    _L6 = (", "        \"'github.com/zhengxiaoyao0716',\"", "    )", "    console.log(", "        _L5,", "        _L6, '\\n'                                                            // if `/N` followed `IDENT` directly without white-space,", "    );", "    // L7", "    void(", "        \"======== ======== ======== ======== ======== ======== ======== ========         // not equals to `$_/N` (without white-space), the latter will execute the codes.\",", "        \"(^_^) Those block only visible in source to make things looks tidiness.\",", "        \"======== ======== ======== ======== ======== ======== ======== ========\",", "        \"\"                                                                           // equals to `$void /4`, nothing would execute but next N lines was gone.", "    );", "", "    // L12", "    const hitokoto = function (", "        ...words", "    ) { return (", "        [...words][parseInt(Math.random() * words.length)]          // `#IDENT(...args) ...results` used to define a function, `()` can be omitted if no arguments.", "    ); };", "    // L13", "    const lang = function () {", "        let result;", "        result = (() => (", "            location.search.match(/lang=(\\w+)/)                                         // `()` was omitted, for no arguments needed.", "        ))(result);", "        result = ((match) => (", "            console.log(match), ['zh', 'en', 'jp'].indexOf(match && match[1])   // although `...results` allowed, only the last result will return.", "        ))(result);", "        result = ((index) => (", "            arguments[index == -1 ? 0 : index] || arguments[0]", "        ))(result);", "        return (", "            result                                                                       // you could use `#IDENT(...args) /N` to define a function composed by mutli-line functions.", "        );", "    };", "    // L17", "    _lang = function () {", "        let result;", "        result = (() => (", "            location.search.match(/lang=(\\w+)/)                                         // the function defined below would be executed immediately.", "        ))(result);", "        result = ((match) => (", "            ['zh', 'en', 'jp'].indexOf(match && match[1])", "        ))(result);", "        result = ((index) => (", "            (...lines) => lines[index == -1 ? 0 : index] || lines[0]            // the last return is a function, and this would be assigned to the `IDENT`.", "        ))(result);", "        return (", "            result                                                                         // `/N` followed `IDENT` directly without parentheses-params and white-space", "        );", "    };", "    const lang = _lang();", "    // L21", "    _version = function () { return (", "        'v0.0.1'                                                               // `#IDENT/value` means `#IDENT/0 value`, you can use this to define constant.", "    ); };", "    const version = _version();", "    // L22", "    _L23 = (", "        `'${version}',\\n`                                                           // for `/N` followed `$IDENT(...args)` directly, 'v0.0.1' was used, instead of 'version'.", "    );", "    console.log.bind(console, '    version:')(", "        _L23, '}\\n'                                  // `$IDENT(this, ...thisArgs) ...args` equals to `$IDENT.bind(this, ...thisArgs)(...Args)`.", "    );", "    // 24", "    void(", "        'equals to `$_/0 ...`'                                                       // notice that the `...args` will be execute for `/N` followed `IDENT` directly without white-space.", "    );", "    // L25", "    void(", "        \",,,\"                                                                        // `/:n` = `/N` , N = n - 25", "    )", "```", "", "", "", "", "", "" // `/:n` = `/N` , N = n - 25
+                        ));
+                        Markplus.register(121, { "tag": "span", "html": "<span>Markplus (document)</span><br>", "class": "Header Header-1", "data-markplus-header-level": "1", "id": "markplusDocument" });
+                        Markplus.register(122, lang({ "tag": "span", "html": "<span>`Markdown` 的加强 [English?]($_ location.search='?lang=en')</span><br>", "class": "Header Header-2", "data-markplus-header-level": "2", "id": "markdownEnglish_LocationSearchLangEn", "at": 123 }, { "tag": "span", "html": "<span>The strengthening of the `Markdown`. [中文版？]($_ location.search='?lang=zh')</span><br>", "class": "Header Header-2", "data-markplus-header-level": "2", "id": "theStrengtheningOfTheMarkdown_LocationSearchLangZh", "at": 124 }));
+                        Markplus.register(125, { "tag": "span", "html": "[![GitHub](https://public.zheng0716.com/static/image/github.svg)](https://github.com/zhengxiaoyao0716/markplus)<br>", "class": "Plain" });
+                        Markplus.register(126, { "tag": "span", "html": "<br>", "class": "Plain" });
+                        Markplus.register(127, { "tag": "span", "html": "<br>", "class": "Divider Divider-bold" });
+                        Markplus.register(128, lang({ "tag": "span", "html": "<span>用法</span><br>", "class": "Header Header-2", "data-markplus-header-level": "2", "id": "用法", "at": 129 }, { "tag": "span", "html": "<span>Usage</span><br>", "class": "Header Header-2", "data-markplus-header-level": "2", "id": "usage", "at": 130 }));
+                        Markplus.register(131, { "tag": "pre", "html": "<span id=\"full\">◤</span><span class=\"hljs armasm\"><span class=\"hljs-symbol\">npm</span> i --save-dev <span class=\"hljs-keyword\">markplus\n</span>./node_modules/.<span class=\"hljs-keyword\">bin/markplus </span>-h</span>", "class": "Code Code-bash", "data-markplus-code-language": "bash", "hljs": true });
+                        Markplus.register(135, { "tag": "span", "html": "<br>", "class": "Plain" });
+                        Markplus.register(136, { "tag": "span", "html": "<br>", "class": "Divider Divider-bold" });
+                        Markplus.register(137, lang({ "tag": "span", "html": "<span>插件</span><br>", "class": "Header Header-2", "data-markplus-header-level": "2", "id": "插件", "at": 138 }, { "tag": "span", "html": "<span>Plugin</span><br>", "class": "Header Header-2", "data-markplus-header-level": "2", "id": "plugin", "at": 139 }));
+                        Markplus.register(140, { "tag": "span", "html": "<span>Via `.markplusrc`, `markplusrc.json`:</span><br>", "class": "Header Header-3", "data-markplus-header-level": "3", "id": "viaMarkplusrcMarkplusrcJson" });
+                        Markplus.register(141, { "tag": "pre", "html": "<span id=\"full\">◤</span><span class=\"hljs json\">{ <span class=\"hljs-attr\">\"plugin\"</span>: [<span class=\"hljs-string\">\"PLUGIN_NAME\"</span>] }</span>", "class": "Code Code-json", "data-markplus-code-language": "json", "hljs": true });
+                        Markplus.register(144, { "tag": "span", "html": "<br>", "class": "Plain" });
+                        Markplus.register(145, { "tag": "span", "html": "<span>Via `markplus.config.js`:</span><br>", "class": "Header Header-3", "data-markplus-header-level": "3", "id": "viaMarkplusConfigJs" });
+                        Markplus.register(146, { "tag": "pre", "html": "<span id=\"full\">◤</span><span class=\"hljs coffeescript\">exports.<span class=\"hljs-keyword\">default</span> = { plugin: [<span class=\"hljs-built_in\">require</span>(<span class=\"hljs-string\">'./MARKPLUS_PLUGIN_MODULE'</span>).<span class=\"hljs-keyword\">default</span>] };</span>", "class": "Code Code-nodejs", "data-markplus-code-language": "nodejs", "hljs": true });
+                        Markplus.register(149, { "tag": "span", "html": "<br>", "class": "Plain" });
+                        Markplus.register(150, { "tag": "span", "html": "<span>Via `.*rc`, `*.json`, `*.config.js`:</span><br>", "class": "Header Header-3", "data-markplus-header-level": "3", "id": "viaRcJsonConfigJs" });
+                        Markplus.register(151, lang({ "tag": "span", "html": "通过 `markplus -c <config.js> ...` 来加载它.<br>", "class": "Plain", "at": 152 }, { "tag": "span", "html": "Use `markplus -c <config.js> ...` to load it.<br>", "class": "Plain", "at": 153 }));
+                        Markplus.register(154, { "tag": "span", "html": "<br>", "class": "Plain" });
+                        Markplus.register(155, lang({ "tag": "span", "html": "<span>带参数的配置:</span><br>", "class": "Header Header-3", "data-markplus-header-level": "3", "id": "带参数的配置", "at": 156 }, { "tag": "span", "html": "<span>Config with arguments:</span><br>", "class": "Header Header-3", "data-markplus-header-level": "3", "id": "configWithArguments", "at": 157 }));
+                        Markplus.register(158, { "tag": "pre", "html": "<span id=\"full\">◤</span><span class=\"hljs javascript\"><span class=\"hljs-keyword\">const</span> config = {\n    <span class=\"hljs-attr\">plugin</span>: [\n        [<span class=\"hljs-string\">\"PLUGIN_NAME\"</span> || <span class=\"hljs-built_in\">require</span>(<span class=\"hljs-string\">'PLUGIN_MODULE'</span>), ...PLUGIN_ARGS]\n    ]\n};</span>", "class": "Code Code-javascript", "data-markplus-code-language": "javascript", "hljs": true });
+                        Markplus.register(165, { "tag": "span", "html": "<br>", "class": "Plain" });
+                        Markplus.register(166, { "tag": "span", "html": "<br>", "class": "Plain" });
+                        Markplus.register(167, { "tag": "span", "html": "<br>", "class": "Divider Divider-bold" });
+                        Markplus.register(168, lang(Array({ "tag": "span", "html": "<span>基础目标</span><br>", "class": "Header Header-2", "data-markplus-header-level": "2", "id": "基础目标", "at": 170 }, { "tag": "span", "html": "<span>更完善的工具链</span><br>", "class": "Header Header-3", "data-markplus-header-level": "3", "id": "更完善的工具链", "at": 171 }, { "tag": "span", "html": "易用，易扩展<br>", "class": "Plain", "at": 172 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 173 }, { "tag": "span", "html": "<span>加强表格</span><br>", "class": "Header Header-3", "data-markplus-header-level": "3", "id": "加强表格", "at": 174 }, { "tag": "span", "html": "混合单元格，宏计算 [examples/table.mp](./examples/table.html)<br>", "class": "Plain", "at": 175 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 176 }, { "tag": "span", "html": "<span>更清晰的语义</span><br>", "class": "Header Header-3", "data-markplus-header-level": "3", "id": "更清晰的语义", "at": 177 }, { "tag": "span", "html": "何时换行，何时滚动<br>", "class": "Plain", "at": 178 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 179 }, { "tag": "span", "html": "<span>动态交互</span><br>", "class": "Header Header-3", "data-markplus-header-level": "3", "id": "动态交互", "at": 180 }, { "tag": "span", "html": "可选、可配置并且安全的动态演出<br>", "class": "Plain", "at": 181 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 182 }, { "tag": "span", "html": "<span>合理的结构</span><br>", "class": "Header Header-3", "data-markplus-header-level": "3", "id": "合理的结构", "at": 183 }, { "tag": "span", "html": "可复用，可继承<br>", "class": "Plain", "at": 184 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 185 }, { "tag": "span", "html": "<span>使用灵活</span><br>", "class": "Header Header-3", "data-markplus-header-level": "3", "id": "使用灵活", "at": 186 }, { "tag": "span", "html": "预编译、运行时渲染 [dist/render.html](./dist/render.html?render=./../ReadMe.mp)<br>", "class": "Plain", "at": 187 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 188 }, { "tag": "span", "html": "<span>但是，一切的前提是：保持简单</span><br>", "class": "Header Header-3", "data-markplus-header-level": "3", "id": "但是，一切的前提是：保持简单", "at": 189 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 190 }, void ("", "", "", "", "", "", "" // since the parent `$lang/60` only accept 60 lines, this would not closed. but it useful in this case that we only want to hide the redundant lines.
+                        )), Array({ "tag": "span", "html": "<span>Base goal</span><br>", "class": "Header Header-2", "data-markplus-header-level": "2", "id": "baseGoal", "at": 200 }, { "tag": "span", "html": "<span>More perfect tool chain.</span><br>", "class": "Header Header-3", "data-markplus-header-level": "3", "id": "morePerfectToolChain", "at": 201 }, { "tag": "span", "html": "Easy to embedded, Convenient extension.<br>", "class": "Plain", "at": 202 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 203 }, { "tag": "span", "html": "<span>Strengthing for `Table` .</span><br>", "class": "Header Header-3", "data-markplus-header-level": "3", "id": "strengthingForTable", "at": 204 }, { "tag": "span", "html": "Multi-unit-grid, Macro calculate. [examples/table.mp](./exmaples/table.html)<br>", "class": "Plain", "at": 205 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 206 }, { "tag": "span", "html": "<span>Clearer semantics.</span><br>", "class": "Header Header-3", "data-markplus-header-level": "3", "id": "clearerSemantics", "at": 207 }, { "tag": "span", "html": "When to break line, When to scroll.<br>", "class": "Plain", "at": 208 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 209 }, { "tag": "span", "html": "<span>Dynamic interactivity.</span><br>", "class": "Header Header-3", "data-markplus-header-level": "3", "id": "dynamicInteractivity", "at": 210 }, { "tag": "span", "html": "Optional\\ configurable and safety dynamic perform.<br>", "class": "Plain", "at": 211 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 212 }, { "tag": "span", "html": "<span>Reasonable structure.</span><br>", "class": "Header Header-3", "data-markplus-header-level": "3", "id": "reasonableStructure", "at": 213 }, { "tag": "span", "html": "Reusable, Inheritable.<br>", "class": "Plain", "at": 214 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 215 }, { "tag": "span", "html": "<span>Flexible usage.</span><br>", "class": "Header Header-3", "data-markplus-header-level": "3", "id": "flexibleUsage", "at": 216 }, { "tag": "span", "html": "Precompiled\\ Runtime-render. [dist/render.html](./dist/render.html?render=./../ReadMe.mp)<br>", "class": "Plain", "at": 217 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 218 }, { "tag": "span", "html": "<span>But, All the premises: Keep Simple.</span><br>", "class": "Header Header-3", "data-markplus-header-level": "3", "id": "butAllThePremisesKeepSimple", "at": 219 }, { "tag": "span", "html": "<br>", "class": "Plain", "at": 220 }, void ("", "", "", "", "", "", ""))));
+                        Markplus.register(229, Array.prototype.fill.bind(new Array(3))({ "tag": "span", "html": "<br>", "class": "Divider Divider-solid", "at": 230 }));
+                        Markplus.register(231, { "tag": "span", "html": "<br>", "class": "Plain" });
+                        Markplus.register(232, hitokoto({ tag: 'span', html: '<span data-markplus-nested="0"></span><span class="Block Block-nested"><span data-markplus-nested="1"></span></span>', class: 'Block', nested: [{ "tag": "span", "html": "<span>我的个性签名：</span><br>", "class": "Header Header-4", "data-markplus-header-level": "4", "id": "我的个性签名：" }, { "tag": "span", "html": "爱冷剑，怜悲箫，月下狼孤啸；轻点画，慢勾描，云中人逍遥。<br>", "class": "Plain" }] }, { tag: 'span', html: '<span data-markplus-nested="0"></span><span class="Block Block-nested"><span data-markplus-nested="1"></span></span>', class: 'Block', nested: [{ "tag": "span", "html": "<span>我的GitHub：</span><br>", "class": "Header Header-4", "data-markplus-header-level": "4", "id": "gitHub" }, { "tag": "span", "html": "https://github.com/zhengxiaoyao0716<br>", "class": "Plain" }] // since empty line could mark the end of `Block`, it would be used as an argument of `hitokoto/2`. so we should use `>` to mark the end.
+                        }));
+                        Markplus.register(239, { "tag": "span", "html": "<br>", "class": "Plain" });
+                        Markplus.register(240, { "tag": "span", "html": "<br>", "class": "Divider Divider-dashed" });
+                        var remoteHitokoto = this.remoteHitokoto = function (url) {
+                            var result = void 0;
+                            result = function () {
+                                return 'a'.charCodeAt(0) + parseInt(Math.random() * 4);
+                            }(result);
+                            result = function (charCode) {
+                                return String.fromCharCode(charCode);
+                            }(result);
+                            result = function (type) {
+                                return url + "?c=" + type;
+                            }(result);
+                            result = function (url) {
+                                return fetch(url).then(function (r) {
+                                    return r.json();
+                                }).then(function (_ref) {
+                                    var hitokoto = _ref.hitokoto,
+                                        from = _ref.from;
+                                    return hitokoto + " --from: " + from;
+                                });
+                            }(result);
+                            return result.then(function (content) {
+                                return "<span class=\"Block\">" + content + "</span>";
+                            });
+                        };
+                        Markplus.register(246, lang({ "tag": "span", "html": "<span>每日一言</span><br>", "class": "Header Header-4", "data-markplus-header-level": "4", "id": "每日一言", "at": 247 }, { "tag": "span", "html": "<span>Daily words</span><br>", "class": "Header Header-4", "data-markplus-header-level": "4", "id": "dailyWords", "at": 248 }, { "tag": "span", "html": "<span>ひとこと</span><br>", "class": "Header Header-4", "data-markplus-header-level": "4", "id": "ひとこと", "at": 249 }));
+                        Markplus.register(250, remoteHitokoto('https://sslapi.hitokoto.cn/'));
+                        Markplus.register(251, { "tag": "span", "html": "<br>", "class": "Plain" });
+                    }
+                }]);
+
+                return _class;
+            }();
+
+            exports.default = _class;
+            ;
+        });    </script>
+    <script>
+        (function (global, factory) {
+            if (typeof define === "function" && define.amd) {
+                define(['exports', 'MarkplusDocument'], factory);
+            } else if (typeof exports !== "undefined") {
+                factory(exports, require('MarkplusDocument'));
+            } else {
+                var mod = {
+                    exports: {}
+                };
+                factory(mod.exports, global.MarkplusDocument);
+                global.launchMarkplusDocument = mod.exports;
+            }
+        })(this, function (exports, _MarkplusDocument) {
+            'use strict';
+
+            Object.defineProperty(exports, "__esModule", {
+                value: true
+            });
+
+            var _MarkplusDocument2 = _interopRequireDefault(_MarkplusDocument);
+
+            function _interopRequireDefault(obj) {
+                return obj && obj.__esModule ? obj : {
+                    default: obj
+                };
+            }
+
+            exports.default = new _MarkplusDocument2.default(function (container, div) {
+                container.appendChild(div);return div;
+            }(document.querySelector('#markplusMarkplusDocument'), document.createElement('div')));
+        });    </script>
+</div>

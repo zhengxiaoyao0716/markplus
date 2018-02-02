@@ -1,16 +1,19 @@
 {
   "name": "markplus",
-  "version": "0.3.7",
+  "version": "0.4.0",
   "description": "The strengthening of the `Markdown`.",
   "main": "index.js",
   "bin": {
     "markplus": "./bin/markplus.js"
   },
   "scripts": {
-    "build": "babel src --out-dir lib -s && node ./bin/markplus ReadMe.mp -o index.html",
-    "start": "npm run build && npm run build-example && start index.html",
-    "test": "npm run build && node lib/test.js",
-    "build-example": "node ./bin/markplus ./examples/table.mp -o ./examples/table.html"
+    "build-index": "node ./bin/markplus ReadMe.mp -o index.html",
+    "build-example": "node ./bin/markplus ./examples/table.mp -o ./examples/table.html",
+    "build-browser": "node ./bin/markplus -o ./dist/render.html --only head && node ./bin/markplus -o ./browser/temp/render-code.js --only code --no-transform && webpack",
+    "build": "babel src --out-dir lib -s && npm run build-index && npm run build-example && npm run build-browser",
+    "start": "npm run build && start index.html",
+    "render": "npm run build && http-server -o http://localhost:8080/dist/render.html",
+    "test": "npm run build && node lib/test.js"
   },
   "repository": {
     "type": "git",
@@ -29,13 +32,17 @@
     "babel-core": "^6.26.0"
   },
   "devDependencies": {
+    "@babel/standalone": "^7.0.0-beta.39",
     "babel-cli": "^6.26.0",
     "babel-eslint": "^8.0.2",
+    "babel-loader": "^7.1.2",
     "babel-plugin-transform-class-properties": "^6.24.1",
     "babel-preset-env": "^1.6.1",
     "babel-preset-flow": "^6.23.0",
     "babel-preset-stage-2": "^6.24.1",
     "eslint": "^4.12.0",
-    "http-server": "^0.10.0"
+    "highlight.js": "^9.12.0",
+    "http-server": "^0.10.0",
+    "webpack": "^3.10.0"
   }
 }

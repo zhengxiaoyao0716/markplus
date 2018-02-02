@@ -120,8 +120,8 @@ The codes above is equivalent to those:
 
 # Markplus (document)
 $lang/2
-## `Markdown` 的加强 [English?](?lang=en)
-## The strengthening of the `Markdown`. [中文版？](?lang=zh)
+## `Markdown` 的加强 [English?]($_ location.search='?lang=en')
+## The strengthening of the `Markdown`. [中文版？]($_ location.search='?lang=zh')
 [![GitHub](https://public.zheng0716.com/static/image/github.svg)](https://github.com/zhengxiaoyao0716/markplus)
 
 ===
@@ -184,7 +184,7 @@ $Array/29
 可复用，可继承
 
 ### 使用灵活
-预编译、运行时渲染
+预编译、运行时渲染 [dist/render.html](./dist/render.html?render=./../ReadMe.mp)
 
 ### 但是，一切的前提是：保持简单
 
@@ -214,7 +214,7 @@ Optional\ configurable and safety dynamic perform.
 Reusable, Inheritable.
 
 ### Flexible usage.
-Precompiled\ Runtime-render.
+Precompiled\ Runtime-render. [dist/render.html](./dist/render.html?render=./../ReadMe.mp)
 
 ### But, All the premises: Keep Simple.
 

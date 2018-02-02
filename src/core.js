@@ -7,10 +7,14 @@ const withEscape = fs.readFileSync(path.join(__dirname, './../src/Parser.js'), '
 const Render = fs.readFileSync(path.join(__dirname, './../src/Render.js'), 'utf-8');
 const polyfill = 'window.Promise || document.writeln(\'<script src="https://cdn.jsdelivr.net/npm/babel-polyfill@6.26.0/dist/polyfill.min.js"><\' + \'/script>\');';
 const CorePlugin = (self: Markplus, pkg: { version: string }) => {
-    if (!self.name) {
+    if (typeof self.name != 'string') {
         const firstH1: Types.Header = self.elements.find(ele => ele instanceof Types.Header && ele.level == 1);
-        const name = firstH1 ? firstH1.id : `_${new Date().getTime()}`;
-        self.name = `${name[0].toUpperCase()}${name.slice(1)}`;
+        if (!firstH1 && self.name instanceof Function) {
+            self.name = self.name();
+        } else {
+            const name = firstH1 ? firstH1.id : `_${new Date().getTime()}`;
+            self.name = `${name[0].toUpperCase()}${name.slice(1)}`;
+        }
     }
     return {
         head: () => [
@@ -25,15 +29,14 @@ const CorePlugin = (self: Markplus, pkg: { version: string }) => {
         dump: () => `
             import * as Markplus from 'Markplus';
             const { default: render, ...extra } = Markplus;
-            class ${self.name} {
+            export default class {
                 constructor(container) {
                     render(container, ctx => this.render({ ...ctx, ...extra }));
                 }
                 render(Markplus) {
                     ${self.elements.map(ele => ele.dump()).join('\n').replace(/\r?\n/g, `\n${' '.repeat(4 * 5)}`)}
                 }
-            }
-            export default ${self.name};
+            };
         `.replace(/\r?\n {12}/g, '\n'),
     };
 };
@@ -54,12 +57,11 @@ export type Options = {
 
 export default class Markplus {
     static from = (content: string | [string], name?: string, opts?: Options): Promise<Markplus> => new Promise((resolve, reject) => {
-        const lines = content instanceof Array ? content : content.split(/\r?\n/);
-        const elements = Parser.parse(lines);
+        const elements = Parser.parse(content);
         resolve(new Markplus(elements, name || '', opts || {}));
     });
 
-    constructor(elements: [Types.Element], name: string, opts: Options) {
+    constructor(elements: [Types.Element], name: string | (() => string), opts: Options) {
         this.elements = elements;
         this.name = name;
 
@@ -82,9 +84,9 @@ export default class Markplus {
         })();
     }
 
-    head = () => this.plugin('head').join('\n\n');
-    code = () => this.plugin('code').join('\n\n');
-    dump = () => this.plugin('dump').join('\n\n');
+    head = () => `${this.plugin('head').join('\n\n')}\n`;
+    code = () => `${this.plugin('code').join('\n\n')}\n`;
+    dump = () => `${this.plugin('dump').join('\n\n')}\n`;
 
     __dirname = __dirname;
 }

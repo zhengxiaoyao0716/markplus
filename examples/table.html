@@ -246,7 +246,9 @@
     .Markplus.full>:not(.Code-full) {
         display: none;
     }
-    .Markplus .Code{background:#1E1E1E;}.Markplus .Code #full{color:#eee;}/* https://highlightjs.org/static/demo/styles/vs2015.css */.hljs{background:#1E1E1E;color:#DCDCDC}.hljs-keyword,.hljs-literal,.hljs-symbol,.hljs-name{color:#569CD6}.hljs-link{color:#569CD6;text-decoration:underline}.hljs-built_in,.hljs-type{color:#4EC9B0}.hljs-number,.hljs-class{color:#B8D7A3}.hljs-string,.hljs-meta-string{color:#D69D85}.hljs-regexp,.hljs-template-tag{color:#9A5334}.hljs-subst,.hljs-function,.hljs-title,.hljs-params,.hljs-formula{color:#DCDCDC}.hljs-comment,.hljs-quote{color:#57A64A;font-style:italic}.hljs-doctag{color:#608B4E}.hljs-meta,.hljs-meta-keyword,.hljs-tag{color:#9B9B9B}.hljs-variable,.hljs-template-variable{color:#BD63C5}.hljs-attr,.hljs-attribute,.hljs-builtin-name{color:#9CDCFE}.hljs-section{color:gold}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}.hljs-bullet,.hljs-selector-tag,.hljs-selector-id,.hljs-selector-class,.hljs-selector-attr,.hljs-selector-pseudo{color:#D7BA7D}.hljs-addition{background-color:#144212;display:inline-block;width:100%}.hljs-deletion{background-color:#600;display:inline-block;width:100%}</style>
+    .Markplus .Code{background:#1E1E1E;}.Markplus .Code #full{color:#eee;}/* https://highlightjs.org/static/demo/styles/vs2015.css */.hljs{background:#1E1E1E;color:#DCDCDC}.hljs-keyword,.hljs-literal,.hljs-symbol,.hljs-name{color:#569CD6}.hljs-link{color:#569CD6;text-decoration:underline}.hljs-built_in,.hljs-type{color:#4EC9B0}.hljs-number,.hljs-class{color:#B8D7A3}.hljs-string,.hljs-meta-string{color:#D69D85}.hljs-regexp,.hljs-template-tag{color:#9A5334}.hljs-subst,.hljs-function,.hljs-title,.hljs-params,.hljs-formula{color:#DCDCDC}.hljs-comment,.hljs-quote{color:#57A64A;font-style:italic}.hljs-doctag{color:#608B4E}.hljs-meta,.hljs-meta-keyword,.hljs-tag{color:#9B9B9B}.hljs-variable,.hljs-template-variable{color:#BD63C5}.hljs-attr,.hljs-attribute,.hljs-builtin-name{color:#9CDCFE}.hljs-section{color:gold}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}.hljs-bullet,.hljs-selector-tag,.hljs-selector-id,.hljs-selector-class,.hljs-selector-attr,.hljs-selector-pseudo{color:#D7BA7D}.hljs-addition{background-color:#144212;display:inline-block;width:100%}.hljs-deletion{background-color:#600;display:inline-block;width:100%}
+</style>
+
 <style>body { margin: 0; width: 100%; height: 100%; }</style>
 
 <script>
@@ -367,6 +369,10 @@
                 ele.classList.add('Array');
                 return ele;
             }], [function (payload) {
+                return payload instanceof HTMLElement;
+            }, function (payload) {
+                return payload;
+            }], [function (payload) {
                 return payload instanceof Object && payload.tag;
             }, function (payload) {
                 var tag = payload.tag,
@@ -392,8 +398,8 @@
                 }
 
                 return '<a href="' + function (matched) {
-                    return matched ? 'javascript:' + matched[1] + '(' + matched[2] + ');' : $[2];
-                }($[2].match(/^\$(\w+)(.*)/)) + '">' + $[1] + '</a>';
+                    return matched ? 'javascript:' + (matched[1] == '_' ? 'void' : matched[1]) + '(' + matched[2] + ');' : $[2];
+                }($[2].match(/^\$([\w.]+)(.*)/)) + '">' + $[1] + '</a>';
             }], [/`(.*?)`/g, '<code>$1</code>']],
             replaceHtml: function replaceHtml(ele, html) {
                 var _this = this;
@@ -414,9 +420,9 @@
 
             /** decorators for each element before they would be insert into container */
             decorators: [function (ele, at) {
-                return ele.setAttribute('data-markplus-at', at);
+                return at != null && ele.setAttribute('data-markplus-at', at);
             }, function (ele, at) {
-                return ele.id || (ele.id = 'L' + at);
+                return ele.id || at != null && (ele.id = 'L' + at);
             }, function (ele, at, payload) {
                 return payload && payload.nested && payload.nested.forEach(function (payload, index) {
                     return Markplus.register(ele.querySelector('*[data-markplus-nested="' + index + '"]'), index, payload);
@@ -457,7 +463,7 @@
             Object.defineProperty(Markplus, 'container', containerProperty);
         };
 
-        var version = exports.version = '0.3.7';
+        var version = exports.version = '0.4.0';
 
         Markplus.renders.unshift([function (payload) {
             return payload instanceof Promise;
@@ -465,7 +471,7 @@
             var ele = document.createElement('span');
             ele.classList.add('Promise');
             payload.then(function (r) {
-                return Markplus.replaceHtml(ele, r + '<br>');
+                return Markplus.register(ele, payload.at, r);
             });
             return ele;
         }]);
@@ -532,6 +538,15 @@
                 return ele.classList.contains('Table') && render(ele, payload);
             });
         })();
+        var exportJson = exports.exportJson = function exportJson(data) {
+            var name = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'markplus-table';
+
+            var blob = new Blob([JSON.stringify(data)], { type: "text/plain;charset=utf-8" });
+            var a = document.createElement('a');
+            a.download = name + '.json';
+            a.href = URL.createObjectURL(blob);
+            a.click();
+        };
 
         Markplus.decorators.push(function (ele, _, payload) {
             return ele.classList.contains('Header') && (ele.innerHTML = '<span class="hash"></span>' + ele.innerHTML, ele.querySelector('.hash').addEventListener('click', function () {
@@ -646,6 +661,17 @@
             var container = document.createElement('div');
             container.classList.add('Code-full');
 
+            var preRender = function preRender(ele, payload) {
+                if (typeof hljs === 'undefined') {
+                    console.error('\'markplus-plugin-render-highlight\' failed to render code for \'highlightjs\' not found.');
+                    return false;
+                }
+                var renderedLang = hljs.highlightAuto(ele.innerHTML, [payload['data-markplus-code-language']]);
+                var rendered = renderedLang.language ? renderedLang : hljs.highlightAuto(ele.innerHTML);
+                ele.innerHTML = '<span id="full">\u25E4</span><span class="hljs ' + rendered.language + '">' + rendered.value + '</span>';
+                return true;
+            };
+
             var highlight = function highlight(ele) {
                 return ele.querySelector('#full').addEventListener('click', function () {
                     var full = document.createElement('pre');
@@ -660,7 +686,6 @@
                     });
                     full.querySelector('#full').addEventListener('click', function () {
                         mpContainer.classList.remove('full');
-                        console.log(mpContainer.classList);
                         container.parentElement.removeChild(container);
                         ele.innerHTML = full.innerHTML;
                         container.innerHTML = '';
@@ -676,173 +701,199 @@
                     location.hash = full.id;
                 });
             };
-            Markplus.decorators.push(function (ele, _, payload) {
-                return ele.classList.contains('Code') && highlight(ele);
+            Markplus.decorators.push(function (ele, _at, payload) {
+                return ele.classList.contains('Code') && (payload.hljs || preRender(ele, payload)) && highlight(ele);
             });
         });
-    });
-</script>
+    });</script>
 
-<script>
-    (function (global, factory) {
-        if (typeof define === "function" && define.amd) {
-            define(["exports", "Markplus"], factory);
-        } else if (typeof exports !== "undefined") {
-            factory(exports, require("Markplus"));
-        } else {
-            var mod = {
-                exports: {}
-            };
-            factory(mod.exports, global.Markplus);
-            global.MarkplusExampleTable = mod.exports;
-        }
-    })(this, function (exports, _Markplus) {
-        "use strict";
-
-        Object.defineProperty(exports, "__esModule", {
-            value: true
-        });
-
-        var Markplus = _interopRequireWildcard(_Markplus);
-
-        function _interopRequireWildcard(obj) {
-            if (obj && obj.__esModule) {
-                return obj;
+<div id="markplusMarkplusExampleTable">
+    <script>
+        (function (global, factory) {
+            if (typeof define === "function" && define.amd) {
+                define(["exports", "Markplus"], factory);
+            } else if (typeof exports !== "undefined") {
+                factory(exports, require("Markplus"));
             } else {
-                var newObj = {};
+                var mod = {
+                    exports: {}
+                };
+                factory(mod.exports, global.Markplus);
+                global.MarkplusExampleTable = mod.exports;
+            }
+        })(this, function (exports, _Markplus) {
+            "use strict";
 
-                if (obj != null) {
-                    for (var key in obj) {
-                        if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key];
+            Object.defineProperty(exports, "__esModule", {
+                value: true
+            });
+
+            var Markplus = _interopRequireWildcard(_Markplus);
+
+            function _interopRequireWildcard(obj) {
+                if (obj && obj.__esModule) {
+                    return obj;
+                } else {
+                    var newObj = {};
+
+                    if (obj != null) {
+                        for (var key in obj) {
+                            if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key];
+                        }
+                    }
+
+                    newObj.default = obj;
+                    return newObj;
+                }
+            }
+
+            var _extends = Object.assign || function (target) {
+                for (var i = 1; i < arguments.length; i++) {
+                    var source = arguments[i];
+
+                    for (var key in source) {
+                        if (Object.prototype.hasOwnProperty.call(source, key)) {
+                            target[key] = source[key];
+                        }
                     }
                 }
 
-                newObj.default = obj;
-                return newObj;
-            }
-        }
-
-        var _extends = Object.assign || function (target) {
-            for (var i = 1; i < arguments.length; i++) {
-                var source = arguments[i];
-
-                for (var key in source) {
-                    if (Object.prototype.hasOwnProperty.call(source, key)) {
-                        target[key] = source[key];
-                    }
-                }
-            }
-
-            return target;
-        };
-
-        function _classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) {
-                throw new TypeError("Cannot call a class as a function");
-            }
-        }
-
-        var _createClass = function () {
-            function defineProperties(target, props) {
-                for (var i = 0; i < props.length; i++) {
-                    var descriptor = props[i];
-                    descriptor.enumerable = descriptor.enumerable || false;
-                    descriptor.configurable = true;
-                    if ("value" in descriptor) descriptor.writable = true;
-                    Object.defineProperty(target, descriptor.key, descriptor);
-                }
-            }
-
-            return function (Constructor, protoProps, staticProps) {
-                if (protoProps) defineProperties(Constructor.prototype, protoProps);
-                if (staticProps) defineProperties(Constructor, staticProps);
-                return Constructor;
+                return target;
             };
-        }();
 
-        function _objectWithoutProperties(obj, keys) {
-            var target = {};
-
-            for (var i in obj) {
-                if (keys.indexOf(i) >= 0) continue;
-                if (!Object.prototype.hasOwnProperty.call(obj, i)) continue;
-                target[i] = obj[i];
-            }
-
-            return target;
-        }
-
-        var render = Markplus.default,
-            extra = _objectWithoutProperties(Markplus, ["default"]);
-
-        var MarkplusExampleTable = function () {
-            function MarkplusExampleTable(container) {
-                var _this = this;
-
-                _classCallCheck(this, MarkplusExampleTable);
-
-                render(container, function (ctx) {
-                    return _this.render(_extends({}, ctx, extra));
-                });
-            }
-
-            _createClass(MarkplusExampleTable, [{
-                key: "render",
-                value: function render(Markplus) {
-                    var _this2 = this;
-
-                    Markplus.register(0, { "tag": "span", "html": "<!-- https://github.com/zhengxiaoyao0716/markplus -->", "class": "Comments" });
-                    Markplus.register(1, { "tag": "span", "html": "<span>markplus-example-table</span><br>", "class": "Header Header-1", "data-markplus-header-level": 1, "id": "markplusExampleTable" });
-                    Markplus.register(2, { "tag": "span", "html": "<br>", "class": "Plain" });
-                    Markplus.register(3, { "tag": "span", "html": "<br>", "class": "Divider Divider-bold" });
-                    Markplus.register(4, { "tag": "span", "html": "<span>Simple Usage:</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2, "id": "simpleUsage" });
-                    Markplus.register(5, function () {
-                        var _5 = {};return _extends({ "tag": "span", "html": "<table><thead><tr><th>ID</th><th>Group</th><th>Name</th></tr></thead><tbody><tr><td>0</td><td>Manager</td><td>Zheng</td></tr><tr><td>1</td><td>User</td><td>Alice</td></tr><tr><td>2</td><td>Guide</td><td>Bob</td></tr></tbody><tfoot></tfoot></table>", "class": "Table", "names": ["ID", "Group", "Name"] }, { parser: [,,], macro: [], table: _5 });
-                    }());
-                    Markplus.register(9, { "tag": "span", "html": "<br>", "class": "Plain" });
-                    Markplus.register(10, { "tag": "span", "html": "<span>Compatible Markdown:</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2, "id": "compatibleMarkdown" });
-                    Markplus.register(11, function () {
-                        var _11 = {};return _extends({ "tag": "span", "html": "<table><thead><tr><th>ID</th><th>Group</th><th>Name</th></tr></thead><tbody><tr><td align=\"left\">0</td><td align=\"center\">Manager</td><td align=\"right\">Zheng</td></tr><tr><td align=\"left\">1</td><td align=\"center\">User</td><td align=\"right\">Alice</td></tr><tr><td align=\"left\">2</td><td align=\"center\">Guide</td><td align=\"right\">Bob</td></tr></tbody><tfoot></tfoot></table>", "class": "Table", "names": ["ID", "Group", "Name"] }, { parser: [,,], macro: [], table: _11 });
-                    }());
-                    Markplus.register(18, { "tag": "span", "html": "<br>", "class": "Plain" });
-                    Markplus.register(19, { "tag": "span", "html": "<span>Complete Feature:</span><br>", "class": "Header Header-2", "data-markplus-header-level": 2, "id": "completeFeature" });
-                    Markplus.register(20, function () {
-                        var completeFeatureExample = _this2.completeFeatureExample = {};return _extends({ "tag": "span", "html": "<table><thead><tr><th align=\"left\">ID</th><th align=\"center\">Group</th><th align=\"center\">Name</th><th align=\"center\">Nickname</th><th align=\"right\">Billing</th><th>(F)</th></tr></thead><tbody><tr><th align=\"left\" data-markplus-table-macro=\"ID_0\">#ID_0</th><td align=\"center\">Manager</td><td align=\"center\" colspan=\"2\">Zheng</td><td style=\"display: none;\" data-markplus-table-ref=\":nth-child(1)>:nth-child(3)\"></td><td align=\"right\">0</td><th data-markplus-table-macro=\"F_0\">#F_0</th></tr><tr><th align=\"left\" data-markplus-table-macro=\"ID_1\">#ID_1</th><td align=\"center\" rowspan=\"2\">User</td><td align=\"center\">Alice</td><td align=\"center\">Ali</td><td align=\"right\">3.00</td><th data-markplus-table-macro=\"F_1\">#F_1</th></tr><tr><th align=\"left\" data-markplus-table-macro=\"ID_2\">#ID_2</th><td style=\"display: none;\" data-markplus-table-ref=\":nth-child(2)>:nth-child(2)\"></td><td align=\"center\" colspan=\"2\">Bob</td><td style=\"display: none;\" data-markplus-table-ref=\":nth-child(3)>:nth-child(3)\"></td><td align=\"right\">3.50</td><th data-markplus-table-macro=\"F_2\">#F_2</th></tr><tr><th align=\"left\" data-markplus-table-macro=\"ID_3\">#ID_3</th><td align=\"center\" colspan=\"3\"></td><td style=\"display: none;\" data-markplus-table-ref=\":nth-child(4)>:nth-child(2)\"></td><td style=\"display: none;\" data-markplus-table-ref=\":nth-child(4)>:nth-child(2)\"></td><th align=\"right\" data-markplus-table-macro=\"Billing_3\">#Billing_3</th><td></td></tr></tbody><tfoot><tr><td align=\"center\" colspan=\"6\">Complete feature example</td></tr></tfoot></table>", "class": "Table", "id": "completeFeatureExample", "names": ["ID", "Group", "Name", "Nickname", "Billing", "F"] }, { parser: [parseInt,,,, parseFloat], macro: [['ID_0', function (ID, Group, Name, Nickname, Billing, F) {
-                                var L = 0;return "0";
-                            }], ['F_0', function (ID, Group, Name, Nickname, Billing, F) {
-                                var L = 0;return "#" + ID[0] + " | $" + Billing[0];
-                            }], ['ID_1', function (ID, Group, Name, Nickname, Billing, F) {
-                                var L = 1;return "" + (1 + ID[L - 1]);
-                            }], ['F_1', function (ID, Group, Name, Nickname, Billing, F) {
-                                var L = 1;return "#" + ID[1] + " | $" + Billing[1];
-                            }], ['ID_2', function (ID, Group, Name, Nickname, Billing, F) {
-                                var L = 2;return "" + (1 + ID[L - 1]);
-                            }], ['F_2', function (ID, Group, Name, Nickname, Billing, F) {
-                                var L = 2;return "#" + ID[2] + " | $" + Billing[2];
-                            }], ['ID_3', function (ID, Group, Name, Nickname, Billing, F) {
-                                var L = 3;return "" + (1 + ID[L - 1]);
-                            }], ['Billing_3', function (ID, Group, Name, Nickname, Billing, F) {
-                                var L = 3;return "" + Billing.slice(0, -1).reduce(function (s, i) {
-                                    return s + i;
-                                });
-                            }]], table: completeFeatureExample });
-                    }());
-                    Markplus.register(27, void (window.completeFeatureExample = Object.keys(this.completeFeatureExample).map(function (k) {
-                        return k + ": " + _this2.completeFeatureExample[k];
-                    }).join('\n')));
-                    Markplus.register(28, { "tag": "span", "html": "[EXPORT]($alert completeFeatureExample)<br>", "class": "Plain" });
-                    Markplus.register(29, { "tag": "span", "html": "<br>", "class": "Plain" });
+            function _classCallCheck(instance, Constructor) {
+                if (!(instance instanceof Constructor)) {
+                    throw new TypeError("Cannot call a class as a function");
                 }
-            }]);
+            }
 
-            return MarkplusExampleTable;
-        }();
+            var _createClass = function () {
+                function defineProperties(target, props) {
+                    for (var i = 0; i < props.length; i++) {
+                        var descriptor = props[i];
+                        descriptor.enumerable = descriptor.enumerable || false;
+                        descriptor.configurable = true;
+                        if ("value" in descriptor) descriptor.writable = true;
+                        Object.defineProperty(target, descriptor.key, descriptor);
+                    }
+                }
 
-        exports.default = MarkplusExampleTable;
-    });
-</script>
+                return function (Constructor, protoProps, staticProps) {
+                    if (protoProps) defineProperties(Constructor.prototype, protoProps);
+                    if (staticProps) defineProperties(Constructor, staticProps);
+                    return Constructor;
+                };
+            }();
 
-<div id="markplusMarkplusExampleTable"></div>
+            function _objectWithoutProperties(obj, keys) {
+                var target = {};
 
-<script>new MarkplusExampleTable.default(document.querySelector('#markplusMarkplusExampleTable'));</script>
+                for (var i in obj) {
+                    if (keys.indexOf(i) >= 0) continue;
+                    if (!Object.prototype.hasOwnProperty.call(obj, i)) continue;
+                    target[i] = obj[i];
+                }
 
+                return target;
+            }
+
+            var render = Markplus.default,
+                extra = _objectWithoutProperties(Markplus, ["default"]);
+
+            var _class = function () {
+                function _class(container) {
+                    var _this = this;
+
+                    _classCallCheck(this, _class);
+
+                    render(container, function (ctx) {
+                        return _this.render(_extends({}, ctx, extra));
+                    });
+                }
+
+                _createClass(_class, [{
+                    key: "render",
+                    value: function render(Markplus) {
+                        var _this2 = this;
+
+                        Markplus.register(0, { "tag": "span", "html": "<!-- https://github.com/zhengxiaoyao0716/markplus -->", "class": "Comments" });
+                        Markplus.register(1, { "tag": "span", "html": "<span>markplus-example-table</span><br>", "class": "Header Header-1", "data-markplus-header-level": "1", "id": "markplusExampleTable" });
+                        Markplus.register(2, { "tag": "span", "html": "<br>", "class": "Plain" });
+                        Markplus.register(3, { "tag": "span", "html": "<br>", "class": "Divider Divider-bold" });
+                        Markplus.register(4, { "tag": "span", "html": "<span>Simple Usage:</span><br>", "class": "Header Header-2", "data-markplus-header-level": "2", "id": "simpleUsage" });
+                        Markplus.register(5, function () {
+                            var _5 = {};return _extends({ "tag": "span", "html": "<table><thead><tr><th>ID</th><th>Group</th><th>Name</th></tr></thead><tbody><tr><td>0</td><td>Manager</td><td>Zheng</td></tr><tr><td>1</td><td>User</td><td>Alice</td></tr><tr><td>2</td><td>Guide</td><td>Bob</td></tr></tbody><tfoot></tfoot></table>", "class": "Table", "names": ["ID", "Group", "Name"] }, { parser: [,,], macro: [], table: _5 });
+                        }());
+                        Markplus.register(9, { "tag": "span", "html": "<br>", "class": "Plain" });
+                        Markplus.register(10, { "tag": "span", "html": "<span>Compatible Markdown:</span><br>", "class": "Header Header-2", "data-markplus-header-level": "2", "id": "compatibleMarkdown" });
+                        Markplus.register(11, function () {
+                            var _11 = {};return _extends({ "tag": "span", "html": "<table><thead><tr><th>ID</th><th>Group</th><th>Name</th></tr></thead><tbody><tr><td align=\"left\">0</td><td align=\"center\">Manager</td><td align=\"right\">Zheng</td></tr><tr><td align=\"left\">1</td><td align=\"center\">User</td><td align=\"right\">Alice</td></tr><tr><td align=\"left\">2</td><td align=\"center\">Guide</td><td align=\"right\">Bob</td></tr></tbody><tfoot></tfoot></table>", "class": "Table", "names": ["ID", "Group", "Name"] }, { parser: [,,], macro: [], table: _11 });
+                        }());
+                        Markplus.register(18, { "tag": "span", "html": "<br>", "class": "Plain" });
+                        Markplus.register(19, { "tag": "span", "html": "<span>Complete Feature:</span><br>", "class": "Header Header-2", "data-markplus-header-level": "2", "id": "completeFeature" });
+                        Markplus.register(20, function () {
+                            var completeFeatureExample = _this2.completeFeatureExample = {};return _extends({ "tag": "span", "html": "<table><thead><tr><th align=\"left\">ID</th><th align=\"center\">Group</th><th align=\"center\">Name</th><th align=\"center\">Nickname</th><th align=\"right\">Billing</th><th>(F)</th></tr></thead><tbody><tr><th align=\"left\" data-markplus-table-macro=\"ID_0\">#ID_0</th><td align=\"center\">Manager</td><td align=\"center\" colspan=\"2\">Zheng</td><td style=\"display: none;\" data-markplus-table-ref=\":nth-child(1)>:nth-child(3)\"></td><td align=\"right\">0</td><th data-markplus-table-macro=\"F_0\">#F_0</th></tr><tr><th align=\"left\" data-markplus-table-macro=\"ID_1\">#ID_1</th><td align=\"center\" rowspan=\"2\">User</td><td align=\"center\">Alice</td><td align=\"center\">Ali</td><td align=\"right\">3.00</td><th data-markplus-table-macro=\"F_1\">#F_1</th></tr><tr><th align=\"left\" data-markplus-table-macro=\"ID_2\">#ID_2</th><td style=\"display: none;\" data-markplus-table-ref=\":nth-child(2)>:nth-child(2)\"></td><td align=\"center\" colspan=\"2\">Bob</td><td style=\"display: none;\" data-markplus-table-ref=\":nth-child(3)>:nth-child(3)\"></td><td align=\"right\">3.50</td><th data-markplus-table-macro=\"F_2\">#F_2</th></tr><tr><th align=\"left\" data-markplus-table-macro=\"ID_3\">#ID_3</th><td align=\"center\" colspan=\"3\"></td><td style=\"display: none;\" data-markplus-table-ref=\":nth-child(4)>:nth-child(2)\"></td><td style=\"display: none;\" data-markplus-table-ref=\":nth-child(4)>:nth-child(2)\"></td><th align=\"right\" data-markplus-table-macro=\"Billing_3\">#Billing_3</th><td></td></tr></tbody><tfoot><tr><td align=\"center\" colspan=\"6\">Complete feature example</td></tr></tfoot></table>", "class": "Table", "id": "completeFeatureExample", "names": ["ID", "Group", "Name", "Nickname", "Billing", "F"] }, { parser: [parseInt,,,, parseFloat], macro: [['ID_0', function (ID, Group, Name, Nickname, Billing, F) {
+                                    var L = 0;return "0";
+                                }], ['F_0', function (ID, Group, Name, Nickname, Billing, F) {
+                                    var L = 0;return "#" + ID[0] + " | $" + Billing[0];
+                                }], ['ID_1', function (ID, Group, Name, Nickname, Billing, F) {
+                                    var L = 1;return "" + (1 + ID[L - 1]);
+                                }], ['F_1', function (ID, Group, Name, Nickname, Billing, F) {
+                                    var L = 1;return "#" + ID[1] + " | $" + Billing[1];
+                                }], ['ID_2', function (ID, Group, Name, Nickname, Billing, F) {
+                                    var L = 2;return "" + (1 + ID[L - 1]);
+                                }], ['F_2', function (ID, Group, Name, Nickname, Billing, F) {
+                                    var L = 2;return "#" + ID[2] + " | $" + Billing[2];
+                                }], ['ID_3', function (ID, Group, Name, Nickname, Billing, F) {
+                                    var L = 3;return "" + (1 + ID[L - 1]);
+                                }], ['Billing_3', function (ID, Group, Name, Nickname, Billing, F) {
+                                    var L = 3;return "" + Billing.slice(0, -1).reduce(function (s, i) {
+                                        return s + i;
+                                    });
+                                }]], table: completeFeatureExample });
+                        }());
+                        Markplus.register(27, void (window.completeFeatureExample = this.completeFeatureExample));
+                        Markplus.register(28, { "tag": "span", "html": "[EXPORT]($Markplus.exportJson completeFeatureExample, 'completeFeatureExample')<br>", "class": "Plain" });
+                        Markplus.register(29, { "tag": "span", "html": "<br>", "class": "Plain" });
+                    }
+                }]);
+
+                return _class;
+            }();
+
+            exports.default = _class;
+            ;
+        });    </script>
+    <script>
+        (function (global, factory) {
+            if (typeof define === "function" && define.amd) {
+                define(['exports', 'MarkplusExampleTable'], factory);
+            } else if (typeof exports !== "undefined") {
+                factory(exports, require('MarkplusExampleTable'));
+            } else {
+                var mod = {
+                    exports: {}
+                };
+                factory(mod.exports, global.MarkplusExampleTable);
+                global.launchMarkplusExampleTable = mod.exports;
+            }
+        })(this, function (exports, _MarkplusExampleTable) {
+            'use strict';
+
+            Object.defineProperty(exports, "__esModule", {
+                value: true
+            });
+
+            var _MarkplusExampleTable2 = _interopRequireDefault(_MarkplusExampleTable);
+
+            function _interopRequireDefault(obj) {
+                return obj && obj.__esModule ? obj : {
+                    default: obj
+                };
+            }
+
+            exports.default = new _MarkplusExampleTable2.default(function (container, div) {
+                container.appendChild(div);return div;
+            }(document.querySelector('#markplusMarkplusExampleTable'), document.createElement('div')));
+        });    </script>
+</div>

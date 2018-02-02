@@ -4,7 +4,7 @@ const code = `[
     payload => {
         const ele = document.createElement('span');
         ele.classList.add('Promise');
-        payload.then(r => Markplus.replaceHtml(ele, \`\${r}<br>\`));
+        payload.then(r => Markplus.register(ele, payload.at, r));
         return ele;
     },
 ]`;

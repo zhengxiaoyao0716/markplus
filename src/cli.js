@@ -29,19 +29,22 @@ const transform = (code, name) => (
 const head = ({ head }) => head();
 const code = ({ code }) => transform(code(), 'Markplus');
 const dump = ({ dump, name }) => transform(dump(), name);
+const launch = ({ name }) => transform(`import ${name} from '${name}';\nexport default new ${name}(
+    ((container, div) => { container.appendChild(div); return div; })(document.querySelector('#markplus${name}'), document.createElement('div'))
+);\n`, `launch${name}`);
 
 const compile = () => {
     const input = commander.args[0]; // eslint-disable-line no-console
-    const name = commander.args[1];
+    const name = commander.args[1] || (() => path.parse(input).name);
     Markplus.from(input ? fs.readFileSync(input, 'utf-8') : '# Hello Markplus', name, opts(commander.config))
         .then(mp => commander.only ? ({ head, code, dump })[commander.only](mp) : [
             head(mp),
             '<style>body { margin: 0; width: 100%; height: 100%; }</style>\n',
-            `<script>\n    ${code(mp).replace(/\r?\n/g, '\n    ').replace(/ {4}\n/g, '\n').trim()}\n</script>\n`,
-            `<script>\n    ${dump(mp).replace(/\r?\n/g, '\n    ').replace(/ {4}\n/g, '\n').trim()}\n</script>\n`,
-            `<div id="markplus${mp.name}"></div>\n`,
-            `<script>new ${mp.name}.default(document.querySelector('#markplus${mp.name}'));</script>\n`,
-            '',
+            `<script>\n    ${code(mp).replace(/\r?\n/g, '\n    ').replace(/ {4}\n/g, '\n').trim()}</script>\n`,
+            `<div id="markplus${mp.name}">`,
+            `    <script>\n        ${dump(mp).replace(/\r?\n/g, '\n        ').replace(/ {8}\n/g, '\n').trim()}    </script>`,
+            `    <script>\n        ${launch(mp).replace(/\r?\n/g, '\n        ').replace(/ {8}\n/g, '\n').trim()}    </script>`,
+            '</div>\n',
         ].join('\n'))
         .then(output => commander.out ?
             fs.writeFileSync(commander.out, output, 'utf-8')
