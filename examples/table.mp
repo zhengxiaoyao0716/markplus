@@ -24,5 +24,5 @@
 - Those words have no effect |\2 Bob           |3.50
                     |\3                        #${Billing.slice(0, -1).reduce((s, i) => s + i)}
 \
-$_ window.completeFeatureExample = this.completeFeatureExample
-[EXPORT]($Markplus.exportJson completeFeatureExample, 'completeFeatureExample')
+$_ window.exportCompleteFeatureExample = () => Markplus.exportJson(this.completeFeatureExample, 'completeFeatureExample')
+[EXPORT]($exportCompleteFeatureExample)

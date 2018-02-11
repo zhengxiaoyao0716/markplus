@@ -51,13 +51,15 @@
     }
     .Markplus .Header.Header-4 {
         font-size: 1.1em;
+        margin: 0;
     }
     .Markplus .Header.Header-5 {
         font-size: 1em;
+        margin: 0;
     }
 
     .Markplus .Divider {
-        border-top: 1px solid #eee;
+        border-top: 1px solid #dfe2e5;
     }
     .Markplus .Divider.Divider-dashed {
         border-top-style: dashed;
@@ -65,15 +67,20 @@
     .Markplus .Divider.Divider-bold {
         border-top-width: 0.25em;
     }
+
+    .Markplus .Block {
+        color: #6a737d;
+    }
     .Markplus .Block, .Markplus .Block>Block {
         display: block;
         position: relative;
-        border-left: 0.25em solid #eee;
+        border-left: 0.25em solid #dfe2e5;
         padding: 0 1em;
     }
     .Markplus .Block:not(.Block-nested) {
         margin-bottom: 6px;
     }
+
     .Markplus .Code {
         overflow-x: auto;
         margin: 0;
@@ -103,12 +110,12 @@
         border-collapse: collapse;
     }
     .Markplus .Table table tr {
-        border-top: 1px solid #ccc;
+        border-top: 1px solid #dfe2e5;
     }
     .Markplus .Table table tr>th,
     .Markplus .Table table tr>td {
         padding: 6px 13px;
-        border: 1px solid #ccc;
+        border: 1px solid #dfe2e5;
     }
     .Markplus .Table table tr:nth-child(2n) {
         background-color: #f6f8fa;
@@ -124,6 +131,59 @@
     .Markplus .Table table tfoot>tr>td {
         font-size: 0.8em;
         padding: 3px 6px;
+    }
+
+    .Markplus .More>.breif>#fold {
+        position: absolute;
+        left: 6px;
+    }
+    .Markplus .More>.detail {
+        display: block;
+        max-height: 0vh;
+        overflow: hidden;
+        transition: max-height 1s;
+    }
+    .Markplus .More:hover>.detail {
+        max-height: 1000vh;
+    }
+    @media print {
+        .Markplus .More>.detail {
+            max-height: 1000vh;
+        }
+    }
+
+    .Markplus .List .item {
+        display: block;
+    }
+    .Markplus .List .item>.tag {
+        padding: 0 0.5em;
+        font-style: italic;
+        font-size: 0.9em;
+    }
+    .Markplus .List .item>.tag::after {
+        content: ".";
+    }
+
+    .Markplus .sugar.bold {
+        font-weight: bold;
+    }
+    .Markplus .sugar.italic {
+        font-style: italic;
+    }
+    .Markplus .sugar.through {
+        text-decoration: line-through;
+    }
+    .Markplus .sugar.under {
+        text-decoration: underline;
+    }
+    .Markplus .sugar.hide {
+        background: #000;
+        color: #000;
+    }
+    @media print {
+        .Markplus .sugar.hide {
+            color: #eee;
+        }
     }
 </style>
 
@@ -174,6 +234,7 @@
     }
     .Markplus-catalog>.Tabel span.tab-1 {
         word-break: break-word;
+        font-size: 1.1em;
     }
     .Markplus-catalog>.Tabel span.tab:not(:hover) {
         color: #9ff;

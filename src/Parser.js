@@ -18,7 +18,7 @@ const Namer = {
     },
     camel(str) {
         const pascal = this.pascal(str);
-        return `${pascal[0].toLowerCase()}${pascal.slice(1)}`;
+        return pascal && `${pascal[0].toLowerCase()}${pascal.slice(1)}`;
     },
 };
 
@@ -151,7 +151,7 @@ export class Header extends Element {
             tag: 'span',
             html: `<span>${this.content}</span><br>`,
             class: `Header Header-${this.level}`,
-            'data-markplus-header-level': `${this.level}`,
+            'data-markplus-header-level': this.level,
             id: this.id,
         };
     }
@@ -164,7 +164,7 @@ export class Code extends Element {
         this.language = language || '';
     }
     get code() { return (this.symbol ? this.lines.slice(1, this.size - 1) : this.lines.map(line => line.slice(4))).join('\n'); }
-    get json() { return { tag: 'pre', html: this.code, class: `Code Code-${this.language}`, 'data-markplus-code-language': this.language }; }
+    get json() { return { tag: 'pre', html: this.code, class: `Code Code-${this.language} raw-text`, 'data-markplus-code-language': this.language, code: { raw: this.code } }; }
     push(line: string, at: number) { // eslint-disable-line no-unused-vars
         this.lines.push(line);
         if (line == this.symbol) {
@@ -193,7 +193,7 @@ export class Block extends Element {
     static regex = /^(>+)\s/;
     static pipeNested = (line, at) => {
         const ele = Parser.pipe(line);
-        if ((ele instanceof Code && !ele.symbol) || ele instanceof Save || ele instanceof Block) {
+        if (ele instanceof Save || ele instanceof Block) {
             return new Plain(line, at);
         }
         return ele;
@@ -254,20 +254,36 @@ export class Block extends Element {
 }
 export class More extends Element {
     static symbol = '^';
-    constructor(line: string, at: number, symbol?: string, brief?: string) {
-        super(-1, line, at, { brief });
-        this.symbol = symbol;
-        // this.brief = brief || '';
-    }
-    get json() {
-        const html = this.lines.length > 1 ? '' : `<span>${this.brief}</span>`;
-        return { tag: 'span', html, class: 'More' };
-    }
-    completed(line: string, at: number) { // eslint-disable-line no-unused-vars
-        if (!line.startsWith('    ')) {
-            this.size = this.lines.length;
+    static pipeNested = (line, at) => {
+        const ele = Parser.pipe(line);
+        if (ele instanceof Save) {
+            return new Plain(line, at);
         }
-        return super.completed(line, at);
+        return ele;
+    }
+    constructor(line: string, at: number, symbol?: string, brief?: string) {
+        super(-1, More.pipeNested(brief || '', at), at, { brief });
+        this.symbol = symbol;
+    }
+    get expr() {
+        const nested = [this.lines[0].expr || JSON.stringify(this.lines[0].json)];
+        const html = `<span class="breif"><span id="fold">^</span><span data-markplus-nested="0"></span></span><span class="detail">${this.lines.slice(1).map(line => {
+            nested.push(line.expr || JSON.stringify(line.json));
+            return `<span data-markplus-nested="${nested.length - 1}"></span>`;
+        }).join('')}</span>`;
+        return `{ tag: 'span', html: '${html}', class: 'More', nested: [${nested.join(', ')}] }`;
+    }
+    push(line: string, at: number) {
+        if (line == this.symbol) {
+            this.size = this.lines.length;
+            return;
+        }
+        const lastLine = this.lines[this.lines.length - 1];
+        if (!lastLine.completed(line, at)) {
+            lastLine.push(line, at);
+            return;
+        }
+        this.lines.push(More.pipeNested(line, at));
     }
 }
 export class Table extends Element {
@@ -413,6 +429,54 @@ export class Table extends Element {
         return super.completed(line, at);
     }
 }
+export class List extends Element {
+    static symbol = '*';
+    static split: (text: string) => [string] = withEscape(text => {
+        const splited = text.split('*').map(sep => sep.trim());
+        return (reg, rep) => splited ? (
+            splited.map(text => text.replace(reg, rep)).reduce((seps, sep) =>
+                [...seps, ...(matched => matched.length == 2 ? [
+                    ...new Array(matched[1] - matched[0] + 1).fill().map((_, i) => matched[0] + i),
+                ] : matched)(sep.match(/(.)/ug).map(c => c.codePointAt(0))).map(c => String.fromCodePoint(c))], [])
+        ) : null;
+    }, '*');
+    constructor(line: string, at: number, symbol: string, content: string) {
+        super(-1, line, at);
+        this.symbol = symbol;
+        this.content = content;
+    }
+    get json() {
+        const list = [];
+        const tags = this.content.startsWith('*') ? List.split(this.content.slice(1)) : (
+            list.push([1, this.content]),
+            new Array(10).fill().map((_, i) => String(i))
+        );
+        const carry = tags.length;
+        const toIndex = carry == 1 ? (tag: string) => tag.match(/(.)/ug).length : (tag: string) => tag.match(/(.)/ug).map(c => tags.indexOf(c)).reverse().reduce((r, c, i) =>
+            r !== false && c !== -1 && (r + c * (carry ** i)), 0);
+        const toTaget = carry == 1 ? (index: number) => tags[0].repeat(1 + index) : (index: number) => index === null ? '' : toTaget(parseInt(index / carry) || null) + tags[index % carry];
+        this.lines.slice(1).map(line => line.match(/\*(\S*)\s(.*)/u).slice(1, 3)).forEach(([tag, text]) =>
+            list.push([tag ? toIndex(tag) : list[list.length - 1] ? 1 + list[list.length - 1][0] : 0, text]));
+        return {
+            tag: 'span',
+            html: list.map(([tag, text]) => `<span class="item"><span class="tag">${toTaget(tag)}</span><span>${text}</span></span>`).join(''),
+            class: `List List-${this.symbol}`,
+        };
+    }
+    push(line: string) {
+        if (line == this.symbol) {
+            this.size = this.lines.length;
+            return;
+        }
+        this.lines.push(line);
+    }
+    completed(line: string, at: number) {
+        if (line == '') {
+            this.size = this.lines.length;
+        }
+        return super.completed(line, at);
+    }
+}
 
 const Parser = {
     Function: {
@@ -538,6 +602,7 @@ const Parser = {
                 ...Array.from(More.symbol).reduce((o, s) => (o[s] = () => new More(line, at, s, content), o), {}),
                 ...(o => (o[Block.symbol.repeat(length)] = () => new Block(line, at, length), o))({}),
                 '\\': () => new Table(line, at, content),
+                ...Array.from(List.symbol).reduce((o, s) => (o[s] = () => new List(line, at, s, content), o), {}),
                 '': () => line.startsWith('    ') ? new Code(line, at, '', 'text') : new Plain(line, at), // 4 white-space means code.
             })[type];
             if (!pipe) {

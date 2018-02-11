@@ -31,7 +31,7 @@ const Markplus = {
                 const { tag, html, ...props } = payload;
                 const ele = document.createElement(tag);
                 ele.innerHTML = html;
-                Object.keys(props).forEach(name => typeof props[name] == 'string' && ele.setAttribute(name, props[name]));
+                Object.keys(props).forEach(name => props[name] instanceof Object || ele.setAttribute(name, props[name]));
                 ele.classList.add('Target');
                 return ele;
             },
@@ -42,7 +42,18 @@ const Markplus = {
     htmlSugars: [
         [/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1">'],
         [/\[(.*?)\]\((.*?)\)/g, (...$) => `<a href="${(matched => matched ? `javascript:${matched[1] == '_' ? 'void' : matched[1]}(${matched[2]});` : $[2])($[2].match(/^\$([\w.]+)(.*)/))}">${$[1]}</a>`],
-        [/`(.*?)`/g, '<code>$1</code>'],
+        [/`(.+?)`/g, '<code>$1</code>'],
+        [/\*\*(\S+?)\*\*/g, '<span class="sugar italic">$1</span>'],
+        [/##(\S+?)##/g, '<span class="sugar bold">$1</span>'],
+        [/~~(\S+?)~~/g, '<span class="sugar through">$1</span>'],
+        [/__(\S+?)__/g, '<span class="sugar under">$1</span>'],
+        [/!!(\S+?)!!/g, '<span class="sugar hide">$1</span>'],
+        [/-\s\[x\]\s(.*)$/g, '<input disabled type="checkbox"><span>$1</span>'],
+        [/-\s\[\s\]\s(.*)$/g, '<input type="checkbox"><span>$1</span>'],
+        [/-\s\[o\]\s(.*)$/g, '<input disabled type="checkbox" checked><span>$1</span>'],
+        [/-\s\(x\)\s(.*)$/g, '<input disabled type="radio"><span>$1</span>'],
+        [/-\s\(\s\)\s(.*)$/g, '<input type="radio"><span>$1</span>'],
+        [/-\s\(o\)\s(.*)$/g, '<input disabled type="radio" checked><span>$1</span>'],
     ],
     /**
      * replace the sugars in the html content.
@@ -50,6 +61,9 @@ const Markplus = {
      * @param {*} html Html content to be replaced the sugars.
      */
     replaceHtml(ele, html) {
+        if (ele.classList.contains('raw-text')) {
+            return;
+        }
         ele.innerHTML = withEscape( // eslint-disable-line no-undef
             html =>
                 (reg, rep) => this.htmlSugars.reduce(

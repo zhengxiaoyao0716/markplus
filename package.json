@@ -1,6 +1,6 @@
 {
   "name": "markplus",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "The strengthening of the `Markdown`.",
   "main": "index.js",
   "bin": {
@@ -8,9 +8,9 @@
   },
   "scripts": {
     "build-index": "node ./bin/markplus ReadMe.mp -o index.html",
-    "build-example": "node ./bin/markplus ./examples/table.mp -o ./examples/table.html",
+    "build-examples": "node ./bin/markplus ./examples/table.mp -o ./examples/table.html && node ./bin/markplus.js ./examples/sugars.mp -o ./examples/sugars.html",
     "build-browser": "node ./bin/markplus -o ./dist/render.html --only head && node ./bin/markplus -o ./browser/temp/render-code.js --only code --no-transform && webpack",
-    "build": "babel src --out-dir lib -s && npm run build-index && npm run build-example && npm run build-browser",
+    "build": "babel src --out-dir lib -s && npm run build-index && npm run build-examples && npm run build-browser",
     "start": "npm run build && start index.html",
     "render": "npm run build && http-server -o http://localhost:8080/dist/render.html",
     "test": "npm run build && node lib/test.js"
