@@ -169,22 +169,22 @@ $lang/60
 $Array/29
 ## 基础目标
 ### 更完善的工具链
-易用，易扩展
+- [o] 易用，易扩展
 
 ### 加强表格
-混合单元格，宏计算 [examples/table.mp](./examples/table.html)
+- [o] 混合单元格，宏计算 [examples/table.mp](./examples/table.html)
 
 ### 更清晰的语义
-何时换行，何时滚动
+- [o] 尽量保留原文本排版的基础上进行美化
 
 ### 动态交互
-可选、可配置并且安全的动态演出
+- [o] 可选、可配置并且安全的动态演出
 
 ### 合理的结构
-可复用，可继承
+- [x] 可复用，可继承
 
 ### 使用灵活
-预编译、运行时渲染 [dist/render.html](./dist/render.html?render=./../ReadMe.mp)
+- [o] 可以编译，也可以运行时渲染 [dist/render.html](./dist/render.html?render=./../ReadMe.mp)
 
 ### 但是，一切的前提是：保持简单
 
@@ -205,7 +205,7 @@ Easy to embedded, Convenient extension.
 Multi-unit-grid, Macro calculate. [examples/table.mp](./exmaples/table.html)
 
 ### Clearer semantics.
-When to break line, When to scroll.
+Keep the original text layout as much as possible to beautify.
 
 ### Dynamic interactivity.
 Optional\ configurable and safety dynamic perform.
@@ -214,7 +214,7 @@ Optional\ configurable and safety dynamic perform.
 Reusable, Inheritable.
 
 ### Flexible usage.
-Precompiled\ Runtime-render. [dist/render.html](./dist/render.html?render=./../ReadMe.mp)
+Both precompiled\ runtime-render support. [dist/render.html](./dist/render.html?render=./../ReadMe.mp)
 
 ### But, All the premises: Keep Simple.
 

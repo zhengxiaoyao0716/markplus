@@ -453,7 +453,7 @@
                 return document.createElement('span');
             }]],
             /** replace the sugars to it's raw syntax */
-            htmlSugars: [[/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1">'], [/\[(.*?)\]\((.*?)\)/g, function () {
+            htmlSugars: [[/`(.+?)`/g, '<code>$1</code>'], [/\*\*(\S+?)\*\*/g, '<span class="sugar italic">$1</span>'], [/##(\S+?)##/g, '<span class="sugar bold">$1</span>'], [/~~(\S+?)~~/g, '<span class="sugar through">$1</span>'], [/__(\S+?)__/g, '<span class="sugar under">$1</span>'], [/!!(\S+?)!!/g, '<span class="sugar hide">$1</span>'], [/-\s\[x\]\s(.*)$/g, '<input disabled type="checkbox"><span>$1</span>'], [/-\s\[\s\]\s(.*)$/g, '<input type="checkbox"><span>$1</span>'], [/-\s\[o\]\s(.*)$/g, '<input disabled type="checkbox" checked><span>$1</span>'], [/-\s\(x\)\s(.*)$/g, '<input disabled type="radio"><span>$1</span>'], [/-\s\(\s\)\s(.*)$/g, '<input type="radio"><span>$1</span>'], [/-\s\(o\)\s(.*)$/g, '<input disabled type="radio" checked><span>$1</span>'], [/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1">'], [/\[(.*?)\]\((.*?)\)/g, function () {
                 for (var _len = arguments.length, $ = Array(_len), _key = 0; _key < _len; _key++) {
                     $[_key] = arguments[_key];
                 }
@@ -461,7 +461,7 @@
                 return '<a href="' + function (matched) {
                     return matched ? 'javascript:' + (matched[1] == '_' ? 'void' : matched[1]) + '(' + matched[2] + ');' : $[2];
                 }($[2].match(/^\$([\w.]+)(.*)/)) + '">' + $[1] + '</a>';
-            }], [/`(.+?)`/g, '<code>$1</code>'], [/\*\*(\S+?)\*\*/g, '<span class="sugar italic">$1</span>'], [/##(\S+?)##/g, '<span class="sugar bold">$1</span>'], [/~~(\S+?)~~/g, '<span class="sugar through">$1</span>'], [/__(\S+?)__/g, '<span class="sugar under">$1</span>'], [/!!(\S+?)!!/g, '<span class="sugar hide">$1</span>'], [/-\s\[x\]\s(.*)$/g, '<input disabled type="checkbox"><span>$1</span>'], [/-\s\[\s\]\s(.*)$/g, '<input type="checkbox"><span>$1</span>'], [/-\s\[o\]\s(.*)$/g, '<input disabled type="checkbox" checked><span>$1</span>'], [/-\s\(x\)\s(.*)$/g, '<input disabled type="radio"><span>$1</span>'], [/-\s\(\s\)\s(.*)$/g, '<input type="radio"><span>$1</span>'], [/-\s\(o\)\s(.*)$/g, '<input disabled type="radio" checked><span>$1</span>']],
+            }]],
             replaceHtml: function replaceHtml(ele, html) {
                 var _this = this;
 

@@ -40,8 +40,6 @@ const Markplus = {
     ],
     /** replace the sugars to it's raw syntax */
     htmlSugars: [
-        [/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1">'],
-        [/\[(.*?)\]\((.*?)\)/g, (...$) => `<a href="${(matched => matched ? `javascript:${matched[1] == '_' ? 'void' : matched[1]}(${matched[2]});` : $[2])($[2].match(/^\$([\w.]+)(.*)/))}">${$[1]}</a>`],
         [/`(.+?)`/g, '<code>$1</code>'],
         [/\*\*(\S+?)\*\*/g, '<span class="sugar italic">$1</span>'],
         [/##(\S+?)##/g, '<span class="sugar bold">$1</span>'],
@@ -54,6 +52,8 @@ const Markplus = {
         [/-\s\(x\)\s(.*)$/g, '<input disabled type="radio"><span>$1</span>'],
         [/-\s\(\s\)\s(.*)$/g, '<input type="radio"><span>$1</span>'],
         [/-\s\(o\)\s(.*)$/g, '<input disabled type="radio" checked><span>$1</span>'],
+        [/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1">'],
+        [/\[(.*?)\]\((.*?)\)/g, (...$) => `<a href="${(matched => matched ? `javascript:${matched[1] == '_' ? 'void' : matched[1]}(${matched[2]});` : $[2])($[2].match(/^\$([\w.]+)(.*)/))}">${$[1]}</a>`],
     ],
     /**
      * replace the sugars in the html content.
